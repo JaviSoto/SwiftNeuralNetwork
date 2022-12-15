@@ -8,61 +8,120 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State
+    private var trainingData: MNISTParser.DataSet?
+
+    var body: some View {
+        Group {
+            if let trainingData {
+                NeuralNetworkView(trainingData: trainingData)
+            } else {
+                VStack {
+                    Text("Loading training data")
+                    ProgressView()
+                }
+            }
+        }.task {
+            await measure("Loading data") {
+                trainingData = await loadTrainingData()
+            }
+        }
+    }
+}
+
+@MainActor
+private final class NeuralNetworkViewModel: ObservableObject {
+    @Published
+    private(set) var neuralNetwork: ImageRecognitionNeuralNetwork
+
+    @Published
+    private(set) var isTraining = false
+
+    init(trainingData: MNISTParser.DataSet) {
+        self.neuralNetwork = ImageRecognitionNeuralNetwork(trainingData: trainingData)
+    }
+
+    func train() {
+        Task {
+            var neuralNetwork = neuralNetwork
+
+            await measure("Training NN") {
+                await neuralNetwork.trainAsync()
+            }
+
+            await MainActor.run { [neuralNetwork] in
+                self.neuralNetwork = neuralNetwork
+            }
+        }
+    }
+}
+
+struct NeuralNetworkView: View {
+    let trainingData: MNISTParser.DataSet
+
+    @ObservedObject
+    private var viewModel: NeuralNetworkViewModel
+
+    init(trainingData: MNISTParser.DataSet) {
+        self.trainingData = trainingData
+        self.viewModel = NeuralNetworkViewModel(trainingData: trainingData)
+    }
+
     enum Tab: CaseIterable {
-        case images
         case training
+        case images
     }
 
     @State
-    var trainingData: MNISTParser.DataSet?
+    private var randomItem: MNISTParser.DataSet.Item?
 
-    @State
-    var randomItem: MNISTParser.DataSet.Item?
+    private var imageDisplayTab: some View {
+        VStack {
+            if let randomItem {
+                SampleImageView(sampleImage: randomItem.image, width: trainingData.imageWidth)
+                    .frame(width: 300)
 
-    @State
-    var neuralNetwork: ImageRecognitionNeuralNetwork?
-
-    var body: some View {
-        TabView {
-            ForEach(Tab.allCases, id: \.self) {
-                switch $0 {
-                case .images:
-                    if let trainingData, let randomItem {
-                        SampleImageView(sampleImage: randomItem.image, width: trainingData.imageWidth)
-                            .frame(width: 300)
-
-                        Text("\(randomItem.label.representedNumber)")
-                    }
-
-                    Button("New image") {
-                        updateImage()
-                    }
-                case .training:
-                    if let trainingData {
-                        Button("Train neural network") {
-                            createNeuralNetwork(with: trainingData)
-                        }
-                    } else {
-                        ProgressView()
-                    }
-                }
+                Text("\(randomItem.label.representedNumber)")
             }
-        }
-        .padding()
-        .task {
-            await measure("Loading data") {
-                trainingData = await loadTrainingData()
+
+            Button("Random image") {
                 updateImage()
             }
         }
     }
 
-    func updateImage() {
-        randomItem = trainingData?.items.randomElement()!
+    private var trainingTab: some View {
+        VStack {
+            Button("Train neural network") {
+                viewModel.train()
+            }
+            .disabled(viewModel.isTraining)
+        }
     }
 
-    func createNeuralNetwork(with trainingData: MNISTParser.DataSet) {
-        self.neuralNetwork = ImageRecognitionNeuralNetwork(trainingData: trainingData)
+    var body: some View {
+        Text("Loaded \(trainingData.items.count) samples")
+
+        TabView {
+            ForEach(Tab.allCases, id: \.self) {
+                switch $0 {
+                case .images:
+                    imageDisplayTab
+                        .tabItem { Text("Images") }
+                case .training:
+                    trainingTab
+                        .tabItem { Text("Training") }
+                }
+            }
+        }
+        .padding()
+        .onAppear {
+            updateImage()
+        }
+    }
+
+    func updateImage() {
+        randomItem = trainingData.items.randomElement()!
     }
 }
 
@@ -92,16 +151,33 @@ func measure<T>(_ name: String, _ f: () async -> T) async -> T {
     return result
 }
 
+private extension ImageRecognitionNeuralNetwork {
+    mutating func trainAsync() async {
+        let copy = self
+
+        let trained = await Task.detached { () -> ImageRecognitionNeuralNetwork in
+            var copy = copy
+            copy.train()
+            return copy
+        }.value
+
+        self = trained
+    }
+}
+
 private func loadTrainingData() async -> MNISTParser.DataSet {
     return await Task.detached { () -> MNISTParser.DataSet in
-        let imageSetFile = Bundle.main.url(forResource: "train-images-idx3-ubyte", withExtension: nil)!
-        let labelsFile = Bundle.main.url(forResource: "train-labels-idx1-ubyte", withExtension: nil)!
+//        let imageSetFile = Bundle.main.url(forResource: "train-images-idx3-ubyte", withExtension: nil)!
+//        let labelsFile = Bundle.main.url(forResource: "train-labels-idx1-ubyte", withExtension: nil)!
+
+        let imageSetFile = Bundle.main.url(forResource: "t10k-images-idx3-ubyte", withExtension: nil)!
+        let labelsFile = Bundle.main.url(forResource: "t10k-labels-idx1-ubyte", withExtension: nil)!
 
         return try! MNISTParser.loadData(imageSetFileURL: imageSetFile, labelDataFileURL: labelsFile)
     }.value
 }
 
-struct ContentView_Previews: PreviewProvider {
+struct ContentView_Previews: PreviewProvider     {
     static var previews: some View {
         ContentView()
     }

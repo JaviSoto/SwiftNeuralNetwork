@@ -16,15 +16,49 @@ struct ImageRecognitionNeuralNetwork {
     init(trainingData: MNISTParser.DataSet) {
         self.trainingData = trainingData
 
-        self.neuralNetwork = NeuralNetwork(inputLayerNeuronCount: Int(trainingData.imageWidth * trainingData.imageWidth))
-        neuralNetwork.addHiddenLayer(withNeuronCount: 10, activationFunction: ReLUActivationFunction)
-        neuralNetwork.addHiddenLayer(withNeuronCount: 10, activationFunction: softMaxActivationFunction)
+        self.neuralNetwork = NeuralNetwork(
+            inputLayerNeuronCount: Int(trainingData.imageWidth * trainingData.imageWidth),
+            outputLayerSize: 10
+        )
+        neuralNetwork.addHiddenLayer(withNeuronCount: 10, activationFunction: .reLU)
+        neuralNetwork.addHiddenLayer(withNeuronCount: 10, activationFunction: .softMax)
+    }
+
+    mutating func train() {
+        let (training, validation) = trainingData.trainingAndValidationMatrixes
+
+        neuralNetwork.train(
+            usingTrainingData: training,
+            validationData: validation,
+            iterations: 500,
+            alpha: 0.1
+        )
     }
 
     func digitPredictions(withInputImage image: SampleImage) -> Matrix {
-        return neuralNetwork.forwardPropagation(
-            inputData: image.pixels.map { Double($0) / Double(SampleImage.Pixel.max) },
-            outputLayerSize: 10
-        )
+        return neuralNetwork.predictions(usingData: image.normalizedPixelVector)
+    }
+}
+
+private extension SampleImage {
+    var normalizedPixelVector: [Double] {
+        return pixels.map { Double($0) / Double(SampleImage.Pixel.max) }
+    }
+}
+
+extension MNISTParser.DataSet {
+    var trainingAndValidationMatrixes: (training: Matrix, validation: Matrix) {
+        let training = Matrix(self.items.map { $0.image.normalizedPixelVector })′
+        let validation = Matrix(self.items.map { [Double($0.label.representedNumber)] })
+
+        return (training, validation)
+    }
+}
+
+private extension Matrix {
+    init(_ sampleSet: MNISTParser.DataSet) {
+        self = Matrix(sampleSet.items.map { item in
+            item.image.normalizedPixelVector
+        })
     }
 }
