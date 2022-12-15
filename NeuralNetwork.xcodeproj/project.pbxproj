@@ -11,6 +11,10 @@
 		5957BCE4294A9F59001DF85D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5957BCE3294A9F59001DF85D /* ContentView.swift */; };
 		5957BCE6294A9F5A001DF85D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5957BCE5294A9F5A001DF85D /* Assets.xcassets */; };
 		5957BCEA294A9F5A001DF85D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5957BCE9294A9F5A001DF85D /* Preview Assets.xcassets */; };
+		5957BCF1294A9F63001DF85D /* MNISTParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5957BCF0294A9F63001DF85D /* MNISTParser.swift */; };
+		5957BCF4294A9FB5001DF85D /* train-images-idx3-ubyte in Resources */ = {isa = PBXBuildFile; fileRef = 5957BCF2294A9FB4001DF85D /* train-images-idx3-ubyte */; };
+		5957BCF5294A9FB5001DF85D /* train-labels-idx1-ubyte in Resources */ = {isa = PBXBuildFile; fileRef = 5957BCF3294A9FB5001DF85D /* train-labels-idx1-ubyte */; };
+		59F58AEB294AF793006FC86D /* ImageRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AEA294AF793006FC86D /* ImageRendering.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +24,10 @@
 		5957BCE5294A9F5A001DF85D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5957BCE7294A9F5A001DF85D /* NeuralNetwork.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NeuralNetwork.entitlements; sourceTree = "<group>"; };
 		5957BCE9294A9F5A001DF85D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		5957BCF0294A9F63001DF85D /* MNISTParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MNISTParser.swift; sourceTree = "<group>"; };
+		5957BCF2294A9FB4001DF85D /* train-images-idx3-ubyte */ = {isa = PBXFileReference; lastKnownFileType = file; path = "train-images-idx3-ubyte"; sourceTree = "<group>"; };
+		5957BCF3294A9FB5001DF85D /* train-labels-idx1-ubyte */ = {isa = PBXFileReference; lastKnownFileType = file; path = "train-labels-idx1-ubyte"; sourceTree = "<group>"; };
+		59F58AEA294AF793006FC86D /* ImageRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageRendering.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,11 +60,15 @@
 		5957BCE0294A9F59001DF85D /* NeuralNetwork */ = {
 			isa = PBXGroup;
 			children = (
+				5957BCF6294A9FBB001DF85D /* Framework */,
 				5957BCE1294A9F59001DF85D /* NeuralNetworkApp.swift */,
 				5957BCE3294A9F59001DF85D /* ContentView.swift */,
+				59F58AEA294AF793006FC86D /* ImageRendering.swift */,
 				5957BCE5294A9F5A001DF85D /* Assets.xcassets */,
 				5957BCE7294A9F5A001DF85D /* NeuralNetwork.entitlements */,
 				5957BCE8294A9F5A001DF85D /* Preview Content */,
+				5957BCF2294A9FB4001DF85D /* train-images-idx3-ubyte */,
+				5957BCF3294A9FB5001DF85D /* train-labels-idx1-ubyte */,
 			);
 			path = NeuralNetwork;
 			sourceTree = "<group>";
@@ -67,6 +79,14 @@
 				5957BCE9294A9F5A001DF85D /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		5957BCF6294A9FBB001DF85D /* Framework */ = {
+			isa = PBXGroup;
+			children = (
+				5957BCF0294A9F63001DF85D /* MNISTParser.swift */,
+			);
+			path = Framework;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -127,7 +147,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5957BCF4294A9FB5001DF85D /* train-images-idx3-ubyte in Resources */,
 				5957BCEA294A9F5A001DF85D /* Preview Assets.xcassets in Resources */,
+				5957BCF5294A9FB5001DF85D /* train-labels-idx1-ubyte in Resources */,
 				5957BCE6294A9F5A001DF85D /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -139,8 +161,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				59F58AEB294AF793006FC86D /* ImageRendering.swift in Sources */,
 				5957BCE4294A9F59001DF85D /* ContentView.swift in Sources */,
 				5957BCE2294A9F59001DF85D /* NeuralNetworkApp.swift in Sources */,
+				5957BCF1294A9F63001DF85D /* MNISTParser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
