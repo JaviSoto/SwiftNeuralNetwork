@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "swiftmatrix",
+      "kind" : "remoteSourceControl",
+      "location" : "git@github.com:theolternative/SwiftMatrix.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "f9b3fb8e86c80addd5dfddeda143695b44c15db4"
+      }
+    }
+  ],
+  "version" : 2
+}

@@ -15,7 +15,21 @@
 		5957BCF4294A9FB5001DF85D /* train-images-idx3-ubyte in Resources */ = {isa = PBXBuildFile; fileRef = 5957BCF2294A9FB4001DF85D /* train-images-idx3-ubyte */; };
 		5957BCF5294A9FB5001DF85D /* train-labels-idx1-ubyte in Resources */ = {isa = PBXBuildFile; fileRef = 5957BCF3294A9FB5001DF85D /* train-labels-idx1-ubyte */; };
 		59F58AEB294AF793006FC86D /* ImageRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AEA294AF793006FC86D /* ImageRendering.swift */; };
+		59F58AED294AFCA0006FC86D /* NeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AEC294AFCA0006FC86D /* NeuralNetwork.swift */; };
+		59F58AF5294B01EE006FC86D /* NeuralNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AF4294B01EE006FC86D /* NeuralNetworkTests.swift */; };
+		59F58AFD294B0412006FC86D /* SwiftMatrix in Frameworks */ = {isa = PBXBuildFile; productRef = 59F58AFC294B0412006FC86D /* SwiftMatrix */; };
+		59F58AFF294B0C66006FC86D /* ImageRecognitionNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AFE294B0C66006FC86D /* ImageRecognitionNeuralNetwork.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		59F58AF6294B01EE006FC86D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5957BCD6294A9F59001DF85D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5957BCDD294A9F59001DF85D;
+			remoteInfo = NeuralNetwork;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		5957BCDE294A9F59001DF85D /* NeuralNetwork.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NeuralNetwork.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -28,10 +42,22 @@
 		5957BCF2294A9FB4001DF85D /* train-images-idx3-ubyte */ = {isa = PBXFileReference; lastKnownFileType = file; path = "train-images-idx3-ubyte"; sourceTree = "<group>"; };
 		5957BCF3294A9FB5001DF85D /* train-labels-idx1-ubyte */ = {isa = PBXFileReference; lastKnownFileType = file; path = "train-labels-idx1-ubyte"; sourceTree = "<group>"; };
 		59F58AEA294AF793006FC86D /* ImageRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageRendering.swift; sourceTree = "<group>"; };
+		59F58AEC294AFCA0006FC86D /* NeuralNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeuralNetwork.swift; sourceTree = "<group>"; };
+		59F58AF2294B01EE006FC86D /* NeuralNetworkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NeuralNetworkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		59F58AF4294B01EE006FC86D /* NeuralNetworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeuralNetworkTests.swift; sourceTree = "<group>"; };
+		59F58AFE294B0C66006FC86D /* ImageRecognitionNeuralNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageRecognitionNeuralNetwork.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		5957BCDB294A9F59001DF85D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				59F58AFD294B0412006FC86D /* SwiftMatrix in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		59F58AEF294B01EE006FC86D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -45,6 +71,7 @@
 			isa = PBXGroup;
 			children = (
 				5957BCE0294A9F59001DF85D /* NeuralNetwork */,
+				59F58AF3294B01EE006FC86D /* NeuralNetworkTests */,
 				5957BCDF294A9F59001DF85D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,6 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				5957BCDE294A9F59001DF85D /* NeuralNetwork.app */,
+				59F58AF2294B01EE006FC86D /* NeuralNetworkTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -64,6 +92,7 @@
 				5957BCE1294A9F59001DF85D /* NeuralNetworkApp.swift */,
 				5957BCE3294A9F59001DF85D /* ContentView.swift */,
 				59F58AEA294AF793006FC86D /* ImageRendering.swift */,
+				59F58AFE294B0C66006FC86D /* ImageRecognitionNeuralNetwork.swift */,
 				5957BCE5294A9F5A001DF85D /* Assets.xcassets */,
 				5957BCE7294A9F5A001DF85D /* NeuralNetwork.entitlements */,
 				5957BCE8294A9F5A001DF85D /* Preview Content */,
@@ -85,8 +114,17 @@
 			isa = PBXGroup;
 			children = (
 				5957BCF0294A9F63001DF85D /* MNISTParser.swift */,
+				59F58AEC294AFCA0006FC86D /* NeuralNetwork.swift */,
 			);
 			path = Framework;
+			sourceTree = "<group>";
+		};
+		59F58AF3294B01EE006FC86D /* NeuralNetworkTests */ = {
+			isa = PBXGroup;
+			children = (
+				59F58AF4294B01EE006FC86D /* NeuralNetworkTests.swift */,
+			);
+			path = NeuralNetworkTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -105,9 +143,30 @@
 			dependencies = (
 			);
 			name = NeuralNetwork;
+			packageProductDependencies = (
+				59F58AFC294B0412006FC86D /* SwiftMatrix */,
+			);
 			productName = NeuralNetwork;
 			productReference = 5957BCDE294A9F59001DF85D /* NeuralNetwork.app */;
 			productType = "com.apple.product-type.application";
+		};
+		59F58AF1294B01EE006FC86D /* NeuralNetworkTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 59F58AF8294B01EE006FC86D /* Build configuration list for PBXNativeTarget "NeuralNetworkTests" */;
+			buildPhases = (
+				59F58AEE294B01EE006FC86D /* Sources */,
+				59F58AEF294B01EE006FC86D /* Frameworks */,
+				59F58AF0294B01EE006FC86D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				59F58AF7294B01EE006FC86D /* PBXTargetDependency */,
+			);
+			name = NeuralNetworkTests;
+			productName = NeuralNetworkTests;
+			productReference = 59F58AF2294B01EE006FC86D /* NeuralNetworkTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -122,6 +181,10 @@
 					5957BCDD294A9F59001DF85D = {
 						CreatedOnToolsVersion = 14.2;
 					};
+					59F58AF1294B01EE006FC86D = {
+						CreatedOnToolsVersion = 14.2;
+						TestTargetID = 5957BCDD294A9F59001DF85D;
+					};
 				};
 			};
 			buildConfigurationList = 5957BCD9294A9F59001DF85D /* Build configuration list for PBXProject "NeuralNetwork" */;
@@ -133,11 +196,15 @@
 				Base,
 			);
 			mainGroup = 5957BCD5294A9F59001DF85D;
+			packageReferences = (
+				59F58AFB294B0412006FC86D /* XCRemoteSwiftPackageReference "SwiftMatrix" */,
+			);
 			productRefGroup = 5957BCDF294A9F59001DF85D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				5957BCDD294A9F59001DF85D /* NeuralNetwork */,
+				59F58AF1294B01EE006FC86D /* NeuralNetworkTests */,
 			);
 		};
 /* End PBXProject section */
@@ -154,6 +221,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		59F58AF0294B01EE006FC86D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -161,14 +235,32 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				59F58AED294AFCA0006FC86D /* NeuralNetwork.swift in Sources */,
 				59F58AEB294AF793006FC86D /* ImageRendering.swift in Sources */,
 				5957BCE4294A9F59001DF85D /* ContentView.swift in Sources */,
 				5957BCE2294A9F59001DF85D /* NeuralNetworkApp.swift in Sources */,
 				5957BCF1294A9F63001DF85D /* MNISTParser.swift in Sources */,
+				59F58AFF294B0C66006FC86D /* ImageRecognitionNeuralNetwork.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		59F58AEE294B01EE006FC86D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				59F58AF5294B01EE006FC86D /* NeuralNetworkTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		59F58AF7294B01EE006FC86D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5957BCDD294A9F59001DF85D /* NeuralNetwork */;
+			targetProxy = 59F58AF6294B01EE006FC86D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		5957BCEB294A9F5A001DF85D /* Debug */ = {
@@ -356,6 +448,50 @@
 			};
 			name = Release;
 		};
+		59F58AF9294B01EE006FC86D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6V6XY979JQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = es.javisoto.NeuralNetworkTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NeuralNetwork.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NeuralNetwork";
+			};
+			name = Debug;
+		};
+		59F58AFA294B01EE006FC86D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6V6XY979JQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = es.javisoto.NeuralNetworkTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NeuralNetwork.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NeuralNetwork";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -377,7 +513,35 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		59F58AF8294B01EE006FC86D /* Build configuration list for PBXNativeTarget "NeuralNetworkTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				59F58AF9294B01EE006FC86D /* Debug */,
+				59F58AFA294B01EE006FC86D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		59F58AFB294B0412006FC86D /* XCRemoteSwiftPackageReference "SwiftMatrix" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "git@github.com:theolternative/SwiftMatrix.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		59F58AFC294B0412006FC86D /* SwiftMatrix */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 59F58AFB294B0412006FC86D /* XCRemoteSwiftPackageReference "SwiftMatrix" */;
+			productName = SwiftMatrix;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 5957BCD6294A9F59001DF85D /* Project object */;
 }

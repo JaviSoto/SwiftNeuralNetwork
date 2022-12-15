@@ -8,34 +8,50 @@
 import SwiftUI
 
 struct ContentView: View {
+    enum Tab: CaseIterable {
+        case images
+        case training
+    }
+
     @State
     var trainingData: MNISTParser.DataSet?
 
     @State
     var randomItem: MNISTParser.DataSet.Item?
 
+    @State
+    var neuralNetwork: ImageRecognitionNeuralNetwork?
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+        TabView {
+            ForEach(Tab.allCases, id: \.self) {
+                switch $0 {
+                case .images:
+                    if let trainingData, let randomItem {
+                        SampleImageView(sampleImage: randomItem.image, width: trainingData.imageWidth)
+                            .frame(width: 300)
 
-            if let trainingData, let randomItem {
-                SampleImageView(sampleImage: randomItem.image, width: trainingData.imageWidth)
-                    .frame(width: 300)
+                        Text("\(randomItem.label.representedNumber)")
+                    }
 
-                Text("\(randomItem.label.representedNumber)")
-            }
-
-            Button("New image") {
-                updateImage()
+                    Button("New image") {
+                        updateImage()
+                    }
+                case .training:
+                    if let trainingData {
+                        Button("Train neural network") {
+                            createNeuralNetwork(with: trainingData)
+                        }
+                    } else {
+                        ProgressView()
+                    }
+                }
             }
         }
         .padding()
-        .onAppear {
-            measure("Loading data") {
-                self.trainingData = loadTrainingData()
+        .task {
+            await measure("Loading data") {
+                trainingData = await loadTrainingData()
                 updateImage()
             }
         }
@@ -43,6 +59,10 @@ struct ContentView: View {
 
     func updateImage() {
         randomItem = trainingData?.items.randomElement()!
+    }
+
+    func createNeuralNetwork(with trainingData: MNISTParser.DataSet) {
+        self.neuralNetwork = ImageRecognitionNeuralNetwork(trainingData: trainingData)
     }
 }
 
@@ -57,11 +77,11 @@ struct SampleImageView: View {
     }
 }
 
-func measure<T>(_ name: String, _ f: () -> T) -> T {
+func measure<T>(_ name: String, _ f: () async -> T) async -> T {
     print("Starting '\(name)'")
 
     let start = CFAbsoluteTimeGetCurrent()
-    let result = f()
+    let result = await f()
     let end = CFAbsoluteTimeGetCurrent()
 
     let diff = end - start
@@ -72,11 +92,13 @@ func measure<T>(_ name: String, _ f: () -> T) -> T {
     return result
 }
 
-private func loadTrainingData() -> MNISTParser.DataSet {
-    let imageSetFile = Bundle.main.url(forResource: "train-images-idx3-ubyte", withExtension: nil)!
-    let labelsFile = Bundle.main.url(forResource: "train-labels-idx1-ubyte", withExtension: nil)!
+private func loadTrainingData() async -> MNISTParser.DataSet {
+    return await Task.detached { () -> MNISTParser.DataSet in
+        let imageSetFile = Bundle.main.url(forResource: "train-images-idx3-ubyte", withExtension: nil)!
+        let labelsFile = Bundle.main.url(forResource: "train-labels-idx1-ubyte", withExtension: nil)!
 
-    return try! MNISTParser.loadData(imageSetFileURL: imageSetFile, labelDataFileURL: labelsFile)
+        return try! MNISTParser.loadData(imageSetFileURL: imageSetFile, labelDataFileURL: labelsFile)
+    }.value
 }
 
 struct ContentView_Previews: PreviewProvider {
