@@ -74,7 +74,28 @@ enum MNISTParser {
         typealias Item = (image: SampleImage, label: Label)
 
         let imageWidth: UInt32
-        let items: [Item]
+        var items: [Item]
+
+        func shuffle() -> DataSet {
+            var copy = self
+            copy.items.shuffle()
+            return copy
+        }
+
+        func cropped(maxLength: Int) -> DataSet {
+            var copy = self
+            copy.items = Array(items.prefix(maxLength))
+            return copy
+        }
+
+        static func + (lhs: DataSet, rhs: DataSet) -> DataSet {
+            assert(lhs.imageWidth == rhs.imageWidth)
+
+            var items = lhs.items
+            items.append(contentsOf: rhs.items)
+
+            return DataSet(imageWidth: lhs.imageWidth, items: items)
+        }
     }
 
     static func loadData(imageSetFileURL: URL, labelDataFileURL: URL) throws -> DataSet {

@@ -18,8 +18,20 @@ final class NeuralNetworkTests: XCTestCase {
     }
 
     func testMatrixAddition() {
-        let matrixA = Matrix([[1, 2, 3], [4, 5, 6]])
+        let matrix = Matrix([[1, 2, 3], [4, 5, 6]])
 
-        XCTAssertEqual(matrixA + 1, Matrix([[2, 3, 4], [5, 6, 7]]))
+        XCTAssertEqual(matrix + 1, Matrix([[2, 3, 4], [5, 6, 7]]))
+    }
+
+    func testMatrixSum() {
+        let matrix = Matrix([[1, 2, 3], [4, 5, 6]])
+
+        XCTAssertEqual(matrix.sum(), 21)
+    }
+
+    func testMatrixSumMatrix() {
+        let matrix = Matrix([[1, 2, 3], [4, 5, 6]])
+
+        XCTAssertEqual(matrix.sumMatrix(), Matrix([[5, 7, 9]]))
     }
 }

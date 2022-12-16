@@ -36,8 +36,8 @@ struct NeuralNetwork {
 
         init(previousLayerSize: Int, neurons: Int, activationFunction: ActivationFunction) {
             // Initialize weights and biases randomly
-            self.weights = Matrix.gaussianRandom(rows: neurons, columns: previousLayerSize)
-            self.biases = Matrix.gaussianRandom(rows: neurons, columns: 1)
+            self.weights = Matrix.random(rows: neurons, columns: previousLayerSize) - 0.5
+            self.biases = Matrix.random(rows: neurons, columns: 1) - 0.5
 
             self.activationFunction = activationFunction
             self.neuronCount = neurons
@@ -46,6 +46,8 @@ struct NeuralNetwork {
 
     private let inputLayerNeuronCount: Int
     private let outputLayerSize: Int
+
+    private(set) var lastTrainingAccuracy: Double?
 
     private var layers: [Layer] = []
 
@@ -62,7 +64,7 @@ struct NeuralNetwork {
     func predictions(usingData data: [Double]) -> Matrix {
         precondition(!layers.isEmpty)
 
-        let inputData = Matrix([data])
+        let inputData = Matrix([data])′
         return forwardPropagation(inputData: inputData).last!.activationFunctionApplied
     }
 
@@ -74,15 +76,17 @@ struct NeuralNetwork {
     mutating func train(usingTrainingData trainingData: Matrix, validationData: Matrix, iterations: Int, alpha: Double) {
         precondition(!layers.isEmpty)
         assert(trainingData.columns == validationData.rows)
-        assert(trainingData.columns > trainingData.rows)
+//        assert(trainingData.columns > trainingData.rows)
         assert(validationData.rows > validationData.columns)
+
+        var lastAccuracy: Double = 0
 
         for i in 0..<iterations {
             let forwardProp = forwardPropagation(inputData: trainingData)
             let backwardsProp = backwardsPropagation(usingTrainingData: trainingData, validationData: validationData, forwardPropagationResults: forwardProp)
 
             for (layerIndex, layerBackPropResult) in backwardsProp.enumerated() {
-                self.updateParameters(in: &self.layers[layerIndex], using: layerBackPropResult, alpha: alpha)
+                self.updateParameters(inLayerAtIndex: layerIndex, using: layerBackPropResult, alpha: alpha)
             }
 
             if i.isMultiple(of: 10) {
@@ -92,8 +96,23 @@ struct NeuralNetwork {
                 let accuracy = accuracy(ofOutput: neuralNetworkOutput, againstValidationData: validationData)
 
                 print("Accuracy: \(Int(accuracy * 100))%")
+
+                lastAccuracy = accuracy
             }
         }
+
+        lastTrainingAccuracy = lastAccuracy
+    }
+
+    func accuracy(usingInputData inputData: Matrix, expectedOutput: Matrix) -> Double {
+        precondition(!layers.isEmpty)
+        assert(inputData.columns == expectedOutput.rows)
+//        assert(trainingData.columns > trainingData.rows)
+        assert(expectedOutput.rows > expectedOutput.columns)
+
+        let forwardProp = forwardPropagation(inputData: inputData)
+        let neuralNetworkOutput = forwardProp.last!.activationFunctionApplied
+        return accuracy(ofOutput: neuralNetworkOutput, againstValidationData: expectedOutput)
     }
 }
 
@@ -120,8 +139,8 @@ private extension NeuralNetwork {
         var nextLayerInput = inputData
 
         for layer in layers {
-            let weightsApplied = layer.weights ° nextLayerInput + layer.biases
-            let activations = layer.activationFunction.function(weightsApplied)
+            let weightsApplied = layer.weights ° nextLayerInput + layer.biases // Zn
+            let activations = layer.activationFunction.function(weightsApplied).assertValid() // An
             nextLayerInput = activations
 
             assert(weightsApplied.rows == layer.neuronCount)
@@ -138,7 +157,7 @@ private extension NeuralNetwork {
     func backwardsPropagation(usingTrainingData trainingData: Matrix, validationData: Matrix, forwardPropagationResults: [LayerForwardPropagationResult])  -> [LayerBackwardPropagationResult] {
         assert(forwardPropagationResults.count == layers.count)
 
-        let m = Double(trainingData.rows)
+        let trainingDataPoints = Double(trainingData.columns) // m
 
         var backwardPropagationResults: [LayerBackwardPropagationResult] = []
 
@@ -152,8 +171,9 @@ private extension NeuralNetwork {
             let layerMatrixDelta = isLastLayer
             ? forwardPropagationData.activationFunctionApplied - validationData.oneHot(withOutputLayerSize: outputLayerSize)
             : layers[index + 1].weights′ ° backwardPropagationResults.last!.layerMatrixDelta * layer.activationFunction.derivative(forwardPropagationResults[index].weightsApplied) // dZn
-            let layerWeightDelta = 1 / m * layerMatrixDelta ° previousLayerActivationData′ // dWn
-            let layerBiasDelta = 1 / m * layerMatrixDelta.sum() // dbn
+            let layerWeightDelta = (1 / trainingDataPoints * layerMatrixDelta).assertValid() ° previousLayerActivationData′
+            // dWn
+            let layerBiasDelta = 1 / trainingDataPoints * layerMatrixDelta.sum() // dbn
 
             assert(layerMatrixDelta.rows == layer.neuronCount)
             assert(layerMatrixDelta.columns == trainingData.columns)
@@ -171,10 +191,11 @@ private extension NeuralNetwork {
         return backwardPropagationResults.reversed()
     }
 
-    func updateParameters(in layer: inout Layer, using backwardPropagationResult: LayerBackwardPropagationResult, alpha: Double) {
-        layer.weights -= alpha * backwardPropagationResult.weightDelta
-        layer.biases -= alpha * backwardPropagationResult.biasDelta
+    mutating func updateParameters(inLayerAtIndex layerIndex: Int, using backwardPropagationResult: LayerBackwardPropagationResult, alpha: Double) {
+        layers[layerIndex].weights -= alpha * backwardPropagationResult.weightDelta
+        layers[layerIndex].biases -= alpha * backwardPropagationResult.biasDelta
     }
+
 
     /// - Parameter output: The output of the neural network. The shape is [outputLayerSize rows, trainingData columns]
     /// - Returns:A `Matrix` with a row for each training data point whose value is the predicted value for it.
@@ -227,12 +248,13 @@ extension NeuralNetwork.ActivationFunction {
 
     static let softMax = NeuralNetwork.ActivationFunction(
         function: {
-            let inputExp = exp($0).map { $0.isFinite ? $0 : .greatestFiniteMagnitude }
-            let result = inputExp / inputExp.sum()
-            return result.map { $0.isFinite ? $0 : 0 }
+            let inputExp = exp($0 - max($0))
+            // Add a small epsilon to the demominator to avoid division by 0
+            let result = inputExp / (inputExp.sumMatrix() + 1e-5)
+            return result.assertValid()
         },
         derivative: { _ in
-            fatalError("TBD")
+            fatalError()
         }
     )
 }
@@ -260,6 +282,30 @@ extension Matrix {
     func sum() -> Double {
         let sum = vDSP.sum(mutableValues)
         return sum.isFinite ? sum : Double.greatestFiniteMagnitude
+    }
+
+    var average: Double {
+        var average: Double = 0
+        let values = mutableValues
+        let count = values.count
+
+        for value in values {
+            average += value / Double(count)
+        }
+
+        return average
+    }
+
+    func sumMatrix() -> Matrix {
+        var result = Matrix(rows: 1, columns: columns, repeatedValue: 0)
+
+        for row in 0..<rows {
+            for column in 0..<columns {
+                result[0, column] += self[row, column]
+            }
+        }
+
+        return result
     }
 
     var mutableValues: [Double] {
@@ -326,6 +372,21 @@ private extension Sequence {
         }
 
         return count
+    }
+}
+
+extension Matrix {
+    var shape: String {
+        return "(\(rows), \(columns))"
+    }
+}
+
+private extension Matrix {
+    func assertValid(file: StaticString = #file, line: UInt = #line) -> Matrix {
+        #if DEBUG
+        mutableValues.forEach { $0.assertValid(file: file, line: line) }
+        #endif
+        return self
     }
 }
 

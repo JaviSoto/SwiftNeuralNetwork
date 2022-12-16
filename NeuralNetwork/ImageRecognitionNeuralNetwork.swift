@@ -9,9 +9,9 @@ import Foundation
 import SwiftMatrix
 
 struct ImageRecognitionNeuralNetwork {
-    private var neuralNetwork: NeuralNetwork
+    private(set) var neuralNetwork: NeuralNetwork
 
-    private let trainingData: MNISTParser.DataSet
+    let trainingData: MNISTParser.DataSet
 
     init(trainingData: MNISTParser.DataSet) {
         self.trainingData = trainingData
@@ -24,19 +24,71 @@ struct ImageRecognitionNeuralNetwork {
         neuralNetwork.addHiddenLayer(withNeuronCount: 10, activationFunction: .softMax)
     }
 
-    mutating func train() {
-        let (training, validation) = trainingData.trainingAndValidationMatrixes
+    struct TrainingConfiguration {
+        var maxTrainingItems: Int = 10000
+        var iterations: Int = 300
+        var alpha: Double = 0.05
+    }
+
+    mutating func train(with configuration: TrainingConfiguration) {
+        let (training, validation) = trainingData
+            .shuffle()
+            .cropped(maxLength: configuration.maxTrainingItems)
+            .trainingAndValidationMatrixes
 
         neuralNetwork.train(
             usingTrainingData: training,
             validationData: validation,
-            iterations: 500,
-            alpha: 0.1
+            iterations: configuration.iterations,
+            alpha: configuration.alpha
         )
     }
 
-    func digitPredictions(withInputImage image: SampleImage) -> Matrix {
-        return neuralNetwork.predictions(usingData: image.normalizedPixelVector)
+    mutating func trainAsync(with configuration: TrainingConfiguration) async {
+        let copy = self
+
+        let trained = await Task.detached { () -> ImageRecognitionNeuralNetwork in
+            var copy = copy
+            copy.train(with: configuration)
+            return copy
+        }.value
+
+        self = trained
+    }
+
+    struct PredictionOutcome {
+        struct Digit: Equatable, Identifiable {
+            let value: Int
+            let confidence: Double
+
+            var id: Int {
+                return value
+            }
+        }
+
+        init() {
+            self.digits = (0...9).map { Digit(value: $0, confidence: 0) }
+        }
+
+        init(digits: [Digit]) {
+            self.digits = digits
+        }
+
+        var digits: [Digit] {
+            didSet {
+                assert(digits.count == 10)
+            }
+        }
+
+        var highestDigit: Digit {
+            return digits.max(by: { $1.confidence > $0.confidence })!
+        }
+    }
+
+    func digitPredictions(withInputImage image: SampleImage) -> PredictionOutcome {
+        let predictionMatrix = neuralNetwork.predictions(usingData: image.normalizedPixelVector)
+
+        return PredictionOutcome(digits: predictionMatrix′.mutableValues.enumerated().map { .init(value: $0, confidence: $1) })
     }
 }
 
