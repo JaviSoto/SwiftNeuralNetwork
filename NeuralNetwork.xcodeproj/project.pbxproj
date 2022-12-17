@@ -20,6 +20,10 @@
 		59D542E2294E75B600919139 /* NeuralNetworkViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542E1294E75B600919139 /* NeuralNetworkViewModel.swift */; };
 		59D542E4294E75D300919139 /* DataLoading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542E3294E75D300919139 /* DataLoading.swift */; };
 		59D542E6294E762500919139 /* NeuralNetworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542E5294E762500919139 /* NeuralNetworkView.swift */; };
+		59D542E8294E7E0100919139 /* PredictionVisualizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542E7294E7E0100919139 /* PredictionVisualizationView.swift */; };
+		59D542EA294E7F9B00919139 /* NeuralNetworkConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542E9294E7F9B00919139 /* NeuralNetworkConfigurationView.swift */; };
+		59D542EC294E801200919139 /* SampleImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542EB294E801200919139 /* SampleImageView.swift */; };
+		59D542EE294E824B00919139 /* RandomData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542ED294E824B00919139 /* RandomData.swift */; };
 		59F58AEB294AF793006FC86D /* ImageRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AEA294AF793006FC86D /* ImageRendering.swift */; };
 		59F58AED294AFCA0006FC86D /* NeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AEC294AFCA0006FC86D /* NeuralNetwork.swift */; };
 		59F58AF5294B01EE006FC86D /* NeuralNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AF4294B01EE006FC86D /* NeuralNetworkTests.swift */; };
@@ -55,6 +59,10 @@
 		59D542E1294E75B600919139 /* NeuralNetworkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeuralNetworkViewModel.swift; sourceTree = "<group>"; };
 		59D542E3294E75D300919139 /* DataLoading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataLoading.swift; sourceTree = "<group>"; };
 		59D542E5294E762500919139 /* NeuralNetworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeuralNetworkView.swift; sourceTree = "<group>"; };
+		59D542E7294E7E0100919139 /* PredictionVisualizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionVisualizationView.swift; sourceTree = "<group>"; };
+		59D542E9294E7F9B00919139 /* NeuralNetworkConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeuralNetworkConfigurationView.swift; sourceTree = "<group>"; };
+		59D542EB294E801200919139 /* SampleImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleImageView.swift; sourceTree = "<group>"; };
+		59D542ED294E824B00919139 /* RandomData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomData.swift; sourceTree = "<group>"; };
 		59F58AEA294AF793006FC86D /* ImageRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageRendering.swift; sourceTree = "<group>"; };
 		59F58AEC294AFCA0006FC86D /* NeuralNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeuralNetwork.swift; sourceTree = "<group>"; };
 		59F58AF2294B01EE006FC86D /* NeuralNetworkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NeuralNetworkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -139,8 +147,11 @@
 			children = (
 				5957BCE3294A9F59001DF85D /* ContentView.swift */,
 				59D542E5294E762500919139 /* NeuralNetworkView.swift */,
-				59D542DD294E717500919139 /* LearningAccuracyEvolutionGraph.swift */,
 				59D542E1294E75B600919139 /* NeuralNetworkViewModel.swift */,
+				59D542E9294E7F9B00919139 /* NeuralNetworkConfigurationView.swift */,
+				59D542DD294E717500919139 /* LearningAccuracyEvolutionGraph.swift */,
+				59D542E7294E7E0100919139 /* PredictionVisualizationView.swift */,
+				59D542EB294E801200919139 /* SampleImageView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -151,6 +162,7 @@
 				59D542D9294C2D8B00919139 /* SwiftUIExtensions.swift */,
 				59F58AEA294AF793006FC86D /* ImageRendering.swift */,
 				59D542DB294C2DAF00919139 /* Helpers.swift */,
+				59D542ED294E824B00919139 /* RandomData.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -291,11 +303,15 @@
 				59D542E4294E75D300919139 /* DataLoading.swift in Sources */,
 				59D542DC294C2DAF00919139 /* Helpers.swift in Sources */,
 				5957BCE4294A9F59001DF85D /* ContentView.swift in Sources */,
+				59D542EE294E824B00919139 /* RandomData.swift in Sources */,
 				5957BCE2294A9F59001DF85D /* NeuralNetworkApp.swift in Sources */,
 				59D542E2294E75B600919139 /* NeuralNetworkViewModel.swift in Sources */,
+				59D542E8294E7E0100919139 /* PredictionVisualizationView.swift in Sources */,
+				59D542EA294E7F9B00919139 /* NeuralNetworkConfigurationView.swift in Sources */,
 				5957BCF1294A9F63001DF85D /* MNISTParser.swift in Sources */,
 				59D542DE294E717500919139 /* LearningAccuracyEvolutionGraph.swift in Sources */,
 				59D542E6294E762500919139 /* NeuralNetworkView.swift in Sources */,
+				59D542EC294E801200919139 /* SampleImageView.swift in Sources */,
 				59F58AFF294B0C66006FC86D /* ImageRecognitionNeuralNetwork.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

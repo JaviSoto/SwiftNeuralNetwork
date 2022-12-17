@@ -30,6 +30,8 @@ struct ImageRecognitionNeuralNetwork {
     init(trainingData: MNISTParser.DataSet) {
         self.trainingData = trainingData
 
+        self.configuration.maxTrainingItems = min(self.configuration.maxTrainingItems, self.trainingData.items.count)
+
         resetNeuralNetwork()
     }
 

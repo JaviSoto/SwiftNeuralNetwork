@@ -22,6 +22,11 @@ struct LearningAccuracyEvolutionGraph: View {
             }
         }
         .chartYScale(domain: 0...100, type: .linear)
+        .chartYAxis {
+            AxisMarks(position: .leading, values: [0, 25, 50, 75, 100])
+        }
+        .chartXAxisLabel("Epoch", alignment: .bottom)
+        .chartYAxisLabel("Accuracy %", alignment: .bottomLeading)
     }
 }
 

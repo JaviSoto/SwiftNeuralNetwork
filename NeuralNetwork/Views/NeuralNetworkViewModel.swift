@@ -14,7 +14,7 @@ final class NeuralNetworkViewModel: ObservableObject {
     @Published
     var neuralNetwork: ImageRecognitionNeuralNetwork
 
-    enum State {
+    enum State: Equatable {
         case idle
         case training
         case trained

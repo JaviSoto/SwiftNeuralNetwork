@@ -7,12 +7,12 @@
 
 import Foundation
 
-struct SampleImage {
+struct SampleImage: Equatable {
     typealias Pixel = UInt8
     let pixels: [Pixel]
 }
 
-struct Label {
+struct Label: Equatable {
     let representedNumber: UInt8
 }
 
