@@ -34,7 +34,7 @@ struct ContentView: View {
 private final class NeuralNetworkViewModel: ObservableObject {
     private let trainingData: MNISTData
     @Published
-    private(set) var neuralNetwork: ImageRecognitionNeuralNetwork
+    var neuralNetwork: ImageRecognitionNeuralNetwork
 
     enum State {
         case idle
@@ -44,9 +44,6 @@ private final class NeuralNetworkViewModel: ObservableObject {
 
     @Published
     private(set) var state: State = .idle
-
-    @Published
-    var trainingConfiguration = ImageRecognitionNeuralNetwork.TrainingConfiguration()
 
     init(trainingData: MNISTData) {
         self.trainingData = trainingData
@@ -60,7 +57,7 @@ private final class NeuralNetworkViewModel: ObservableObject {
             var neuralNetwork = neuralNetwork
 
             await measure("Training NN") {
-                await neuralNetwork.trainAsync(with: trainingConfiguration)
+                await neuralNetwork.trainAsync()
             }
 
             await MainActor.run { [neuralNetwork] in
@@ -72,6 +69,12 @@ private final class NeuralNetworkViewModel: ObservableObject {
 
     func predictions(forImage image: SampleImage) -> ImageRecognitionNeuralNetwork.PredictionOutcome {
         return neuralNetwork.digitPredictions(withInputImage: image)
+    }
+
+    func trainingDataSetAccuracy() -> Double {
+        let (images, labels) = trainingData.training.trainingAndValidationMatrixes
+
+        return neuralNetwork.neuralNetwork.accuracy(usingInputData: images, expectedOutput: labels)
     }
 
     func testDataSetAccuracy() -> Double {
@@ -149,11 +152,30 @@ struct NeuralNetworkView: View {
                         Text("Configuration")
                             .font(.title2)
 
-                        ValueSlider(name: "Max items", value: $viewModel.trainingConfiguration.maxTrainingItems.double, range: 1...viewModel.neuralNetwork.trainingData.items.count.double, step: 20, decimalPoints: 0)
+                        ValueSlider(name: "Max items", value: $viewModel.neuralNetwork.configuration.maxTrainingItems.double, range: 500...viewModel.neuralNetwork.trainingData.items.count.double, step: 500, decimalPoints: 0)
 
-                        ValueSlider(name: "Iterations", value: $viewModel.trainingConfiguration.iterations.double, range: 1...10000, step: 10, decimalPoints: 0)
+                        ValueSlider(name: "Iterations", value: $viewModel.neuralNetwork.configuration.iterations.double, range: 1...1500, step: 100, decimalPoints: 0)
 
-                        ValueSlider(name: "Learning Rate", value: $viewModel.trainingConfiguration.alpha, range: 0.0001...1, step: 0.01, decimalPoints: 2)
+                        ValueSlider(name: "Learning Rate", value: $viewModel.neuralNetwork.configuration.learningRate, range: 0.01...1, step: 0.05, decimalPoints: 2)
+
+                        Text("Layers")
+                        TabView {
+                            ForEach(Array(viewModel.neuralNetwork.configuration.layers.enumerated()), id: \.0) { (index, layerConfig) in
+                                VStack {
+                                    ValueSlider(name: "Number of neurons", value: $viewModel.neuralNetwork.configuration.layers[index].neuronCount.double, range: 1...20, step: 1, decimalPoints: 0)
+                                    if viewModel.neuralNetwork.configuration.layers.count > 1 {
+                                        Button("Remove") {
+                                            viewModel.neuralNetwork.configuration.layers.remove(at: index)
+                                        }
+                                    }
+                                }
+                                .tabItem { Text("Layer \(index + 1)") }
+                            }
+                        }
+
+                        Button("Add layer") {
+                            viewModel.neuralNetwork.configuration.layers.append(.init(neuronCount: 10))
+                        }
                     }
                     Spacer()
                 }
@@ -169,10 +191,7 @@ struct NeuralNetworkView: View {
                     .disabled(viewModel.state == .training)
                 }
 
-                if let accuracy = viewModel.neuralNetwork.neuralNetwork.lastTrainingAccuracy {
-                    Text("Training Accuracy: \(accuracy.formatted(.percent.precision(.significantDigits(3))))")
-                }
-
+                Text("Training Data Set Accuracy: \(viewModel.trainingDataSetAccuracy().formatted(.percent.precision(.significantDigits(3))))")
                 Text("Test Data Set Accuracy: \(viewModel.testDataSetAccuracy().formatted(.percent.precision(.significantDigits(3))))")
             }
         }
@@ -200,7 +219,7 @@ struct NeuralNetworkView: View {
     }
 
     func updateImage() {
-        let item = trainingData.testing.items.randomElement()!
+        let item = trainingData.all.items.randomElement()!
         randomItem = item
         randomItemPredictionOutcome = viewModel.predictions(forImage: item.image)
         randomItemPredictionOutcome.digits.sort(using: predictionOutcomeTableOrder)
@@ -236,6 +255,8 @@ func measure<T>(_ name: String, _ f: () async -> T) async -> T {
 struct MNISTData {
     let training: MNISTParser.DataSet
     let testing: MNISTParser.DataSet
+
+    let all: MNISTParser.DataSet
 }
 
 private func loadTrainingData() async -> MNISTData {
@@ -250,7 +271,7 @@ private func loadTrainingData() async -> MNISTData {
 
         let testing = try! MNISTParser.loadData(imageSetFileURL: testImages, labelDataFileURL: testLabels)
 
-        return .init(training: training, testing: testing)
+        return .init(training: training, testing: testing, all: training + testing)
     }.value
 }
 

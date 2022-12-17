@@ -47,8 +47,6 @@ struct NeuralNetwork {
     private let inputLayerNeuronCount: Int
     private let outputLayerSize: Int
 
-    private(set) var lastTrainingAccuracy: Double?
-
     private var layers: [Layer] = []
 
     init(inputLayerNeuronCount: Int, outputLayerSize: Int) {
@@ -73,20 +71,18 @@ struct NeuralNetwork {
     ///   - trainingData: The data to feed ot the input layer of the NN (X). Each column must be an example, with its rows being the data.
     ///   - validationData: The expected data at the output of the NN (Y). Each row must be an example, with only 1 column.
     ///   - iterations: How many iterations to run.
-    mutating func train(usingTrainingData trainingData: Matrix, validationData: Matrix, iterations: Int, alpha: Double) {
+    mutating func train(usingTrainingData trainingData: Matrix, validationData: Matrix, iterations: Int, learningRate: Double) {
         precondition(!layers.isEmpty)
         assert(trainingData.columns == validationData.rows)
 //        assert(trainingData.columns > trainingData.rows)
         assert(validationData.rows > validationData.columns)
-
-        var lastAccuracy: Double = 0
 
         for i in 0..<iterations {
             let forwardProp = forwardPropagation(inputData: trainingData)
             let backwardsProp = backwardsPropagation(usingTrainingData: trainingData, validationData: validationData, forwardPropagationResults: forwardProp)
 
             for (layerIndex, layerBackPropResult) in backwardsProp.enumerated() {
-                self.updateParameters(inLayerAtIndex: layerIndex, using: layerBackPropResult, alpha: alpha)
+                self.updateParameters(inLayerAtIndex: layerIndex, using: layerBackPropResult, learningRate: learningRate)
             }
 
             if i.isMultiple(of: 10) {
@@ -96,12 +92,8 @@ struct NeuralNetwork {
                 let accuracy = accuracy(ofOutput: neuralNetworkOutput, againstValidationData: validationData)
 
                 print("Accuracy: \(Int(accuracy * 100))%")
-
-                lastAccuracy = accuracy
             }
         }
-
-        lastTrainingAccuracy = lastAccuracy
     }
 
     func accuracy(usingInputData inputData: Matrix, expectedOutput: Matrix) -> Double {
@@ -191,9 +183,9 @@ private extension NeuralNetwork {
         return backwardPropagationResults.reversed()
     }
 
-    mutating func updateParameters(inLayerAtIndex layerIndex: Int, using backwardPropagationResult: LayerBackwardPropagationResult, alpha: Double) {
-        layers[layerIndex].weights -= alpha * backwardPropagationResult.weightDelta
-        layers[layerIndex].biases -= alpha * backwardPropagationResult.biasDelta
+    mutating func updateParameters(inLayerAtIndex layerIndex: Int, using backwardPropagationResult: LayerBackwardPropagationResult, learningRate: Double) {
+        layers[layerIndex].weights -= learningRate * backwardPropagationResult.weightDelta
+        layers[layerIndex].biases -= learningRate * backwardPropagationResult.biasDelta
     }
 
 

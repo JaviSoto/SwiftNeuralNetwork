@@ -9,28 +9,33 @@ import Foundation
 import SwiftMatrix
 
 struct ImageRecognitionNeuralNetwork {
-    private(set) var neuralNetwork: NeuralNetwork
+    private(set) var neuralNetwork: NeuralNetwork!
+
+    var configuration = Configuration()
 
     let trainingData: MNISTParser.DataSet
+
+    struct Configuration {
+        struct LayerConfig {
+            var neuronCount: Int
+        }
+
+        var maxTrainingItems: Int = 10000
+        var iterations: Int = 300
+        var learningRate: Double = 0.03
+
+        var layers: [LayerConfig] = [.init(neuronCount: 10), .init(neuronCount: 10)]
+    }
 
     init(trainingData: MNISTParser.DataSet) {
         self.trainingData = trainingData
 
-        self.neuralNetwork = NeuralNetwork(
-            inputLayerNeuronCount: Int(trainingData.imageWidth * trainingData.imageWidth),
-            outputLayerSize: 10
-        )
-        neuralNetwork.addHiddenLayer(withNeuronCount: 10, activationFunction: .reLU)
-        neuralNetwork.addHiddenLayer(withNeuronCount: 10, activationFunction: .softMax)
+        resetNeuralNetwork()
     }
 
-    struct TrainingConfiguration {
-        var maxTrainingItems: Int = 10000
-        var iterations: Int = 300
-        var alpha: Double = 0.05
-    }
+    mutating func train() {
+        resetNeuralNetwork()
 
-    mutating func train(with configuration: TrainingConfiguration) {
         let (training, validation) = trainingData
             .shuffle()
             .cropped(maxLength: configuration.maxTrainingItems)
@@ -40,16 +45,16 @@ struct ImageRecognitionNeuralNetwork {
             usingTrainingData: training,
             validationData: validation,
             iterations: configuration.iterations,
-            alpha: configuration.alpha
+            learningRate: configuration.learningRate
         )
     }
 
-    mutating func trainAsync(with configuration: TrainingConfiguration) async {
+    mutating func trainAsync() async {
         let copy = self
 
         let trained = await Task.detached { () -> ImageRecognitionNeuralNetwork in
             var copy = copy
-            copy.train(with: configuration)
+            copy.train()
             return copy
         }.value
 
@@ -89,6 +94,20 @@ struct ImageRecognitionNeuralNetwork {
         let predictionMatrix = neuralNetwork.predictions(usingData: image.normalizedPixelVector)
 
         return PredictionOutcome(digits: predictionMatrix′.mutableValues.enumerated().map { .init(value: $0, confidence: $1) })
+    }
+
+    // MARK: - Private
+
+    private mutating func resetNeuralNetwork() {
+        neuralNetwork = NeuralNetwork(
+            inputLayerNeuronCount: Int(trainingData.imageWidth * trainingData.imageWidth),
+            outputLayerSize: 10
+        )
+
+        for (index, layer) in configuration.layers.enumerated() {
+            let isLastLayer = index == configuration.layers.count - 1
+            neuralNetwork.addHiddenLayer(withNeuronCount: layer.neuronCount, activationFunction: isLastLayer ? .softMax : .reLU)
+        }
     }
 }
 
