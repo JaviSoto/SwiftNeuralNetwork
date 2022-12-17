@@ -1,92 +1,11 @@
 //
-//  ContentView.swift
+//  NeuralNetworkView.swift
 //  NeuralNetwork
 //
-//  Created by Javier Soto on 12/14/22.
+//  Created by Javier Soto on 12/17/22.
 //
 
 import SwiftUI
-import SwiftMatrix
-
-struct ContentView: View {
-    @State
-    private var trainingData: MNISTData?
-
-    var body: some View {
-        Group {
-            if let trainingData {
-                NeuralNetworkView(trainingData: trainingData)
-            } else {
-                VStack {
-                    Text("Loading training data")
-                    ProgressView()
-                }
-            }
-        }.task {
-            trainingData = await loadTrainingData()
-        }
-    }
-}
-
-@MainActor
-private final class NeuralNetworkViewModel: ObservableObject {
-    private let trainingData: MNISTData
-    @Published
-    var neuralNetwork: ImageRecognitionNeuralNetwork
-
-    enum State {
-        case idle
-        case training
-        case trained
-    }
-
-    @Published
-    private(set) var state: State = .idle
-
-    @Published
-    private(set) var trainingDataAccuracy: Double = 0
-
-    @Published
-    private(set) var testDataAccuracy: Double = 0
-
-    init(trainingData: MNISTData) {
-        self.trainingData = trainingData
-        self.neuralNetwork = ImageRecognitionNeuralNetwork(trainingData: trainingData.training)
-        self.updateAccuracies()
-    }
-
-    func train() {
-        self.state = .training
-
-        Task {
-            var neuralNetwork = neuralNetwork
-
-            await neuralNetwork.trainAsync()
-
-            await MainActor.run { [neuralNetwork] in
-                self.neuralNetwork = neuralNetwork
-                self.updateAccuracies()
-                self.state = .trained
-            }
-        }
-    }
-
-    func predictions(forImage image: SampleImage) -> ImageRecognitionNeuralNetwork.PredictionOutcome {
-        return measure("Calculating predictions") {
-            return neuralNetwork.digitPredictions(withInputImage: image)
-        }
-    }
-
-    private func updateAccuracies() {
-        measure("Calculating accuracy") {
-            let (trainingImages, trainingLabels) = trainingData.training.trainingAndValidationMatrixes
-            trainingDataAccuracy = neuralNetwork.neuralNetwork.accuracy(usingInputData: trainingImages, expectedOutput: trainingLabels)
-
-            let (testImages, testLabels) = trainingData.testing.trainingAndValidationMatrixes
-            testDataAccuracy = neuralNetwork.neuralNetwork.accuracy(usingInputData: testImages, expectedOutput: testLabels)
-        }
-    }
-}
 
 struct NeuralNetworkView: View {
     let trainingData: MNISTData
@@ -134,10 +53,19 @@ struct NeuralNetworkView: View {
                         GroupBox(label: SwiftUI.Label("Layers", systemImage: "square.2.layers.3d").font(.title2)) {
                             ForEach(Array(viewModel.neuralNetwork.configuration.layers.enumerated()), id: \.0) { (index, layerConfig) in
                                 VStack {
-                                    HStack {
-                                        Text("Layer \(index + 1)")
+                                    let isOutputLayer = index == viewModel.neuralNetwork.configuration.layers.count - 1
 
-                                        if viewModel.neuralNetwork.configuration.layers.count > 1 {
+                                    HStack {
+                                        Text("\(index + 1):")
+                                            .bold()
+
+                                        if isOutputLayer {
+                                            Text("Output Layer")
+                                        } else {
+                                            Text("Hidden Layer")
+                                        }
+
+                                        if viewModel.neuralNetwork.configuration.layers.count > 1 && !isOutputLayer {
                                             Button(action: {
                                                 viewModel.neuralNetwork.configuration.layers.remove(at: index)
                                             }, label: {
@@ -146,15 +74,24 @@ struct NeuralNetworkView: View {
                                         }
                                     }
 
-                                    ValueSlider(name: "Number of neurons", value: $viewModel.neuralNetwork.configuration.layers[index].neuronCount.double, range: 1...20, step: 1, decimalPoints: 0)
+                                    if !isOutputLayer {
+                                        ValueSlider(name: "Number of neurons", value: $viewModel.neuralNetwork.configuration.layers[index].neuronCount.double, range: 1...20, step: 1, decimalPoints: 0)
+                                    }
 
                                     Divider()
                                 }
                             }
 
                             Button("Add layer") {
-                                viewModel.neuralNetwork.configuration.layers.append(.init(neuronCount: 10))
+                                viewModel.neuralNetwork.configuration.layers.insert(.init(neuronCount: 10), at: viewModel.neuralNetwork.configuration.layers.count - 1)
                             }
+                        }
+                    }
+
+                    Section {
+                        GroupBox(label: SwiftUI.Label("Accuracy Evolution", systemImage: "chart.line.uptrend.xyaxis").font(.title2)) {
+                            LearningAccuracyEvolutionGraph(sessions: viewModel.trainingSessionsAccuracies)
+                                .padding()
                         }
                     }
                 }
@@ -165,7 +102,7 @@ struct NeuralNetworkView: View {
                 Text("Training Data Set Accuracy: \(viewModel.trainingDataAccuracy.formatted(.percent.precision(.significantDigits(3))))")
                 Text("Test Data Set Accuracy: \(viewModel.testDataAccuracy.formatted(.percent.precision(.significantDigits(3))))")
 
-                HStack {
+                HStack(spacing: 10) {
                     if viewModel.state == .training {
                         ProgressView()
                     }
@@ -184,7 +121,7 @@ struct NeuralNetworkView: View {
                     VStack {
                         VStack {
                             Text("Data label: \(randomItem.label.representedNumber)")
-                                .font(.largeTitle)
+                                .font(.title)
 
                             SampleImageView(sampleImage: randomItem.image, width: trainingData.training.imageWidth)
                                 .frame(width: 300)
@@ -245,38 +182,21 @@ struct SampleImageView: View {
     }
 }
 
-struct MNISTData {
-    let training: MNISTParser.DataSet
-    let testing: MNISTParser.DataSet
+struct NeuralNetworkView_Previews: PreviewProvider {
+    private static let imageWidth: UInt32 = 28
 
-    let all: MNISTParser.DataSet
-}
+    private static var randomItem: MNISTParser.DataSet.Item {
+        return (
+            image: .init(pixels: Array(0..<(imageWidth * imageWidth)).map { _ in UInt8.random(in: 0...UInt8.max) }),
+            label: .init(representedNumber: (UInt8(0)...9).randomElement()!)
+        )
+    }
 
-private func loadTrainingData() async -> MNISTData {
-    return await Task.detached { () -> MNISTData in
-        return measure("Loading training data") {
-            let trainingImages = Bundle.main.url(forResource: "train-images-idx3-ubyte", withExtension: nil)!
-            let trainingLabels = Bundle.main.url(forResource: "train-labels-idx1-ubyte", withExtension: nil)!
-
-            let testImages = Bundle.main.url(forResource: "t10k-images-idx3-ubyte", withExtension: nil)!
-            let testLabels = Bundle.main.url(forResource: "t10k-labels-idx1-ubyte", withExtension: nil)!
-
-#if DEBUG
-            let maxCount = 1000
-#else
-            let maxCount: Int? = nil
-#endif
-
-            let training = try! MNISTParser.loadData(imageSetFileURL: trainingImages, labelDataFileURL: trainingLabels, maxCount: maxCount)
-            let testing = try! MNISTParser.loadData(imageSetFileURL: testImages, labelDataFileURL: testLabels, maxCount: maxCount)
-
-            return .init(training: training, testing: testing, all: training + testing)
-        }
-    }.value
-}
-
-struct ContentView_Previews: PreviewProvider     {
     static var previews: some View {
-        ContentView()
+        NeuralNetworkView(trainingData: .init(
+            training: .init(imageWidth: imageWidth, items: (0..<10).map { _ in randomItem }),
+            testing: .init(imageWidth: imageWidth, items: (0..<10).map { _ in randomItem }),
+            all: .init(imageWidth: imageWidth, items: (0..<20).map { _ in randomItem })
+        ))
     }
 }

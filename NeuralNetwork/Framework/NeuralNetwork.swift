@@ -71,11 +71,16 @@ struct NeuralNetwork {
     ///   - trainingData: The data to feed ot the input layer of the NN (X). Each column must be an example, with its rows being the data.
     ///   - validationData: The expected data at the output of the NN (Y). Each row must be an example, with only 1 column.
     ///   - iterations: How many iterations to run.
-    mutating func train(usingTrainingData trainingData: Matrix, validationData: Matrix, iterations: Int, learningRate: Double) {
+    ///   - learnignRate: How much change each iteration should have towards learning.
+    ///   - progressObserver: An object you can observe to get updates on the training.
+    mutating func train(usingTrainingData trainingData: Matrix, validationData: Matrix, iterations: Int, learningRate: Double, progressObserver: TrainingProgressObserver) {
         precondition(!layers.isEmpty)
         assert(trainingData.columns == validationData.rows)
-//        assert(trainingData.columns > trainingData.rows)
         assert(validationData.rows > validationData.columns)
+        assert(layers.last!.neuronCount == outputLayerSize)
+
+        progressObserver.accuracies = []
+        progressObserver.accuracies.reserveCapacity(iterations)
 
         for i in 0..<iterations {
             let forwardProp = forwardPropagation(inputData: trainingData)
@@ -85,10 +90,12 @@ struct NeuralNetwork {
                 self.updateParameters(inLayerAtIndex: layerIndex, using: layerBackPropResult, learningRate: learningRate)
             }
 
-            if i.isMultiple(of: 10) {
-                let neuralNetworkOutput = forwardProp.last!.activationFunctionApplied
-                let accuracy = accuracy(ofOutput: neuralNetworkOutput, againstValidationData: validationData)
+            let neuralNetworkOutput = forwardProp.last!.activationFunctionApplied
+            let accuracy = accuracy(ofOutput: neuralNetworkOutput, againstValidationData: validationData)
 
+            progressObserver.accuracies.append(accuracy)
+
+            if i.isMultiple(of: 10) {
                 print("Iteration \(i). Accuracy: \(Int(accuracy * 100))%")
             }
         }
@@ -97,12 +104,24 @@ struct NeuralNetwork {
     func accuracy(usingInputData inputData: Matrix, expectedOutput: Matrix) -> Double {
         precondition(!layers.isEmpty)
         assert(inputData.columns == expectedOutput.rows)
-//        assert(trainingData.columns > trainingData.rows)
         assert(expectedOutput.rows > expectedOutput.columns)
 
         let forwardProp = forwardPropagation(inputData: inputData)
         let neuralNetworkOutput = forwardProp.last!.activationFunctionApplied
         return accuracy(ofOutput: neuralNetworkOutput, againstValidationData: expectedOutput)
+    }
+}
+
+// MARK: - Progress Reporting
+
+extension NeuralNetwork {
+    typealias TrainingSessionAccuracyProgress = [Double]
+
+    final class TrainingProgressObserver: ObservableObject {
+        @Published
+        fileprivate(set) var accuracies: TrainingSessionAccuracyProgress = []
+
+        init() {}
     }
 }
 
@@ -195,7 +214,7 @@ private extension NeuralNetwork {
 
         for column in 0..<output.columns {
             var maxPredictedValue: Double = .leastNormalMagnitude
-            var predictedValue: Double!
+            var predictedValue: Double = 0
 
             for row in 0..<output.rows {
                 let value = output[row, column]

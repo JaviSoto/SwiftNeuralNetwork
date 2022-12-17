@@ -33,7 +33,7 @@ struct ImageRecognitionNeuralNetwork {
         resetNeuralNetwork()
     }
 
-    mutating func train() {
+    mutating func train(with observer: NeuralNetwork.TrainingProgressObserver) {
         resetNeuralNetwork()
 
         let (training, validation) = trainingData
@@ -45,17 +45,18 @@ struct ImageRecognitionNeuralNetwork {
             usingTrainingData: training,
             validationData: validation,
             iterations: configuration.iterations,
-            learningRate: configuration.learningRate
+            learningRate: configuration.learningRate,
+            progressObserver: observer
         )
     }
 
-    mutating func trainAsync() async {
+    mutating func trainAsync(with observer: NeuralNetwork.TrainingProgressObserver) async {
         let copy = self
 
         let trained = await Task.detached { () -> ImageRecognitionNeuralNetwork in
             return measure("Training NN") { [copy] in
                 var copy = copy
-                copy.train()
+                copy.train(with: observer)
                 return copy
             }
         }.value
@@ -107,8 +108,8 @@ struct ImageRecognitionNeuralNetwork {
         )
 
         for (index, layer) in configuration.layers.enumerated() {
-            let isLastLayer = index == configuration.layers.count - 1
-            neuralNetwork.addHiddenLayer(withNeuronCount: layer.neuronCount, activationFunction: isLastLayer ? .softMax : .reLU)
+            let isOutputLayer = index == configuration.layers.count - 1
+            neuralNetwork.addHiddenLayer(withNeuronCount: layer.neuronCount, activationFunction: isOutputLayer ? .softMax : .reLU)
         }
     }
 }
