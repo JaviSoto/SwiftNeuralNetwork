@@ -99,11 +99,6 @@ struct NeuralNetworkView: View {
         self.viewModel = NeuralNetworkViewModel(trainingData: trainingData)
     }
 
-    enum Tab: CaseIterable {
-        case training
-        case images
-    }
-
     @State
     private var randomItem: MNISTParser.DataSet.Item?
 
@@ -113,81 +108,62 @@ struct NeuralNetworkView: View {
     @State
     private var predictionOutcomeTableOrder = [KeyPathComparator(\ImageRecognitionNeuralNetwork.PredictionOutcome.Digit.confidence, order: .reverse)]
 
-    private var imageDisplayTab: some View {
-        VStack {
-            if let randomItem {
-                HStack {
-                    VStack {
-                        SampleImageView(sampleImage: randomItem.image, width: trainingData.training.imageWidth)
-                            .frame(width: 300)
+    var body: some View {
+        NavigationView {
+            VStack {
+                List {
+                    Section {
+                        GroupBox(label: SwiftUI.Label("Training", systemImage: "gear").font(.title2)) {
+                            VStack(alignment: .leading) {
+                                Text("Data Set:").bold()
+                                Text("\(trainingData.training.items.count) training samples")
+                                Text("\(trainingData.testing.items.count) test samples")
+                                Divider()
 
-                        Text("Data label: \(randomItem.label.representedNumber)")
-                    }
+                                ValueSlider(name: "Max items", value: $viewModel.neuralNetwork.configuration.maxTrainingItems.double, range: 500...viewModel.neuralNetwork.trainingData.items.count.double, step: 500, decimalPoints: 0)
 
-                    Table(randomItemPredictionOutcome.digits, sortOrder: $predictionOutcomeTableOrder) {
-                        TableColumn("Digit") { digit in
-                            Text("\(digit.value)")
-                                .bold(randomItemPredictionOutcome.highestDigit.value == digit.value)
-                        }
-                        .width(50)
+                                ValueSlider(name: "Iterations", value: $viewModel.neuralNetwork.configuration.iterations.double, range: 1...1500, step: 100, decimalPoints: 0)
 
-                        TableColumn("Confidence") { digit in
-                            Text("\(digit.confidence.formatted(.percent.precision(.significantDigits(3))))")
-                                .bold(randomItemPredictionOutcome.highestDigit.value == digit.value)
-                        }
-                    }
-                    .onChange(of: predictionOutcomeTableOrder) { newOrder in
-                        randomItemPredictionOutcome.digits.sort(using: newOrder)
-                    }
-                }
-            }
+                                ValueSlider(name: "Learning Rate", value: $viewModel.neuralNetwork.configuration.learningRate, range: 0.01...1, step: 0.05, decimalPoints: 2)
 
-            Button("Random image") {
-                updateImage()
-            }
-        }
-    }
-
-    private var trainingTab: some View {
-        VStack {
-            HStack {
-                GroupBox(label: SwiftUI.Label("Training", systemImage: "gear").font(.title2)) {
-                    ZStack(alignment: .center) {
-                        VStack {
-                            ValueSlider(name: "Max items", value: $viewModel.neuralNetwork.configuration.maxTrainingItems.double, range: 500...viewModel.neuralNetwork.trainingData.items.count.double, step: 500, decimalPoints: 0)
-
-                            ValueSlider(name: "Iterations", value: $viewModel.neuralNetwork.configuration.iterations.double, range: 1...1500, step: 100, decimalPoints: 0)
-
-                            ValueSlider(name: "Learning Rate", value: $viewModel.neuralNetwork.configuration.learningRate, range: 0.01...1, step: 0.05, decimalPoints: 2)
-
+                            }
                         }
                     }
 
-                    Spacer()
-                }
-                
-                VStack {
-                    SwiftUI.Label("Layers", systemImage: "square.2.layers.3d").font(.title2)
-                    TabView {
-                        ForEach(Array(viewModel.neuralNetwork.configuration.layers.enumerated()), id: \.0) { (index, layerConfig) in
-                            VStack {
-                                ValueSlider(name: "Number of neurons", value: $viewModel.neuralNetwork.configuration.layers[index].neuronCount.double, range: 1...20, step: 1, decimalPoints: 0)
-                                if viewModel.neuralNetwork.configuration.layers.count > 1 {
-                                    Button("Remove") {
-                                        viewModel.neuralNetwork.configuration.layers.remove(at: index)
+                    Section {
+                        GroupBox(label: SwiftUI.Label("Layers", systemImage: "square.2.layers.3d").font(.title2)) {
+                            ForEach(Array(viewModel.neuralNetwork.configuration.layers.enumerated()), id: \.0) { (index, layerConfig) in
+                                VStack {
+                                    HStack {
+                                        Text("Layer \(index + 1)")
+
+                                        if viewModel.neuralNetwork.configuration.layers.count > 1 {
+                                            Button(action: {
+                                                viewModel.neuralNetwork.configuration.layers.remove(at: index)
+                                            }, label: {
+                                                Image(systemName: "minus.circle.fill")
+                                            })
+                                        }
                                     }
+
+                                    ValueSlider(name: "Number of neurons", value: $viewModel.neuralNetwork.configuration.layers[index].neuronCount.double, range: 1...20, step: 1, decimalPoints: 0)
+
+                                    Divider()
                                 }
                             }
-                            .tabItem { Text("Layer \(index + 1)") }
+
+                            Button("Add layer") {
+                                viewModel.neuralNetwork.configuration.layers.append(.init(neuronCount: 10))
+                            }
                         }
                     }
                 }
-            }
 
-            VStack {
-                Button("Add layer") {
-                    viewModel.neuralNetwork.configuration.layers.append(.init(neuronCount: 10))
-                }
+                Spacer()
+
+                Divider()
+                Text("Training Data Set Accuracy: \(viewModel.trainingDataAccuracy.formatted(.percent.precision(.significantDigits(3))))")
+                Text("Test Data Set Accuracy: \(viewModel.testDataAccuracy.formatted(.percent.precision(.significantDigits(3))))")
 
                 HStack {
                     if viewModel.state == .training {
@@ -198,29 +174,53 @@ struct NeuralNetworkView: View {
                     }
                     .disabled(viewModel.state == .training)
                 }
-
-                Text("Training Data Set Accuracy: \(viewModel.trainingDataAccuracy.formatted(.percent.precision(.significantDigits(3))))")
-                Text("Test Data Set Accuracy: \(viewModel.testDataAccuracy.formatted(.percent.precision(.significantDigits(3))))")
             }
-        }
-    }
+            .padding(.vertical)
+            .frame(minWidth: 300)
+            .navigationTitle("Configuration")
 
-    var body: some View {
-        Text("Loaded \(trainingData.training.items.count + trainingData.testing.items.count) samples")
+            VStack {
+                if let randomItem {
+                    VStack {
+                        VStack {
+                            Text("Data label: \(randomItem.label.representedNumber)")
+                                .font(.largeTitle)
 
-        TabView {
-            ForEach(Tab.allCases, id: \.self) {
-                switch $0 {
-                case .images:
-                    imageDisplayTab
-                        .tabItem { Text("Images") }
-                case .training:
-                    trainingTab
-                        .tabItem { Text("Training") }
+                            SampleImageView(sampleImage: randomItem.image, width: trainingData.training.imageWidth)
+                                .frame(width: 300)
+                        }
+
+                        Table(randomItemPredictionOutcome.digits, sortOrder: $predictionOutcomeTableOrder) {
+                            TableColumn("Digit") { digit in
+                                Text("\(digit.value)")
+                                    .bold(randomItemPredictionOutcome.highestDigit.value == digit.value)
+                            }
+                            .width(50)
+
+                            TableColumn("Confidence") { digit in
+                                Text("\(digit.confidence.formatted(.percent.precision(.significantDigits(3))))")
+                                    .bold(randomItemPredictionOutcome.highestDigit.value == digit.value)
+                            }
+                        }
+                        .onChange(of: predictionOutcomeTableOrder) { newOrder in
+                            randomItemPredictionOutcome.digits.sort(using: newOrder)
+                        }
+                        .frame(height: 300)
+                    }
+                }
+
+                Spacer()
+
+                Divider()
+
+                Button("Random image") {
+                    updateImage()
                 }
             }
+            .padding(.vertical)
         }
-        .padding()
+        .navigationSplitViewStyle(.prominentDetail)
+        .frame(minWidth: 1000, minHeight: 600)
         .onAppear {
             updateImage()
         }
@@ -261,11 +261,11 @@ private func loadTrainingData() async -> MNISTData {
             let testImages = Bundle.main.url(forResource: "t10k-images-idx3-ubyte", withExtension: nil)!
             let testLabels = Bundle.main.url(forResource: "t10k-labels-idx1-ubyte", withExtension: nil)!
 
-            #if DEBUG
+#if DEBUG
             let maxCount = 1000
-            #else
+#else
             let maxCount: Int? = nil
-            #endif
+#endif
 
             let training = try! MNISTParser.loadData(imageSetFileURL: trainingImages, labelDataFileURL: trainingLabels, maxCount: maxCount)
             let testing = try! MNISTParser.loadData(imageSetFileURL: testImages, labelDataFileURL: testLabels, maxCount: maxCount)

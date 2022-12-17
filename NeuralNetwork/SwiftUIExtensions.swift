@@ -20,6 +20,8 @@ struct ValueSlider: View {
         Slider(value: $value, in: range, step: step) {
             Text("\(name): \(value, specifier: "%.\(decimalPoints)f")\(unit)")
                 .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .layoutPriority(10)
         }
     }
 }
