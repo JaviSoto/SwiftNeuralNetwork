@@ -86,12 +86,10 @@ struct NeuralNetwork {
             }
 
             if i.isMultiple(of: 10) {
-                print("Iteration \(i)")
-
                 let neuralNetworkOutput = forwardProp.last!.activationFunctionApplied
                 let accuracy = accuracy(ofOutput: neuralNetworkOutput, againstValidationData: validationData)
 
-                print("Accuracy: \(Int(accuracy * 100))%")
+                print("Iteration \(i). Accuracy: \(Int(accuracy * 100))%")
             }
         }
     }
@@ -196,11 +194,12 @@ private extension NeuralNetwork {
         predictedValues.reserveCapacity(output.columns)
 
         for column in 0..<output.columns {
-            var maxPredictedValue: Double = -1
-            var predictedValue: Double = -1
+            var maxPredictedValue: Double = .leastNormalMagnitude
+            var predictedValue: Double!
 
             for row in 0..<output.rows {
                 let value = output[row, column]
+                assert(value > 0)
                 if value > maxPredictedValue {
                     maxPredictedValue = value
                     predictedValue = Double(row + 1)

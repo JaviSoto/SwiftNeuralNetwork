@@ -23,9 +23,7 @@ struct ContentView: View {
                 }
             }
         }.task {
-            await measure("Loading data") {
-                trainingData = await loadTrainingData()
-            }
+            trainingData = await loadTrainingData()
         }
     }
 }
@@ -45,9 +43,16 @@ private final class NeuralNetworkViewModel: ObservableObject {
     @Published
     private(set) var state: State = .idle
 
+    @Published
+    private(set) var trainingDataAccuracy: Double = 0
+
+    @Published
+    private(set) var testDataAccuracy: Double = 0
+
     init(trainingData: MNISTData) {
         self.trainingData = trainingData
         self.neuralNetwork = ImageRecognitionNeuralNetwork(trainingData: trainingData.training)
+        self.updateAccuracies()
     }
 
     func train() {
@@ -56,31 +61,30 @@ private final class NeuralNetworkViewModel: ObservableObject {
         Task {
             var neuralNetwork = neuralNetwork
 
-            await measure("Training NN") {
-                await neuralNetwork.trainAsync()
-            }
+            await neuralNetwork.trainAsync()
 
             await MainActor.run { [neuralNetwork] in
                 self.neuralNetwork = neuralNetwork
+                self.updateAccuracies()
                 self.state = .trained
             }
         }
     }
 
     func predictions(forImage image: SampleImage) -> ImageRecognitionNeuralNetwork.PredictionOutcome {
-        return neuralNetwork.digitPredictions(withInputImage: image)
+        return measure("Calculating predictions") {
+            return neuralNetwork.digitPredictions(withInputImage: image)
+        }
     }
 
-    func trainingDataSetAccuracy() -> Double {
-        let (images, labels) = trainingData.training.trainingAndValidationMatrixes
+    private func updateAccuracies() {
+        measure("Calculating accuracy") {
+            let (trainingImages, trainingLabels) = trainingData.training.trainingAndValidationMatrixes
+            trainingDataAccuracy = neuralNetwork.neuralNetwork.accuracy(usingInputData: trainingImages, expectedOutput: trainingLabels)
 
-        return neuralNetwork.neuralNetwork.accuracy(usingInputData: images, expectedOutput: labels)
-    }
-
-    func testDataSetAccuracy() -> Double {
-        let (images, labels) = trainingData.testing.trainingAndValidationMatrixes
-
-        return neuralNetwork.neuralNetwork.accuracy(usingInputData: images, expectedOutput: labels)
+            let (testImages, testLabels) = trainingData.testing.trainingAndValidationMatrixes
+            testDataAccuracy = neuralNetwork.neuralNetwork.accuracy(usingInputData: testImages, expectedOutput: testLabels)
+        }
     }
 }
 
@@ -145,42 +149,46 @@ struct NeuralNetworkView: View {
     }
 
     private var trainingTab: some View {
-        HStack {
-            VStack {
-                HStack {
-                    VStack {
-                        Text("Configuration")
-                            .font(.title2)
+        VStack {
+            HStack {
+                GroupBox(label: SwiftUI.Label("Training", systemImage: "gear").font(.title2)) {
+                    ZStack(alignment: .center) {
+                        VStack {
+                            ValueSlider(name: "Max items", value: $viewModel.neuralNetwork.configuration.maxTrainingItems.double, range: 500...viewModel.neuralNetwork.trainingData.items.count.double, step: 500, decimalPoints: 0)
 
-                        ValueSlider(name: "Max items", value: $viewModel.neuralNetwork.configuration.maxTrainingItems.double, range: 500...viewModel.neuralNetwork.trainingData.items.count.double, step: 500, decimalPoints: 0)
+                            ValueSlider(name: "Iterations", value: $viewModel.neuralNetwork.configuration.iterations.double, range: 1...1500, step: 100, decimalPoints: 0)
 
-                        ValueSlider(name: "Iterations", value: $viewModel.neuralNetwork.configuration.iterations.double, range: 1...1500, step: 100, decimalPoints: 0)
+                            ValueSlider(name: "Learning Rate", value: $viewModel.neuralNetwork.configuration.learningRate, range: 0.01...1, step: 0.05, decimalPoints: 2)
 
-                        ValueSlider(name: "Learning Rate", value: $viewModel.neuralNetwork.configuration.learningRate, range: 0.01...1, step: 0.05, decimalPoints: 2)
-
-                        Text("Layers")
-                        TabView {
-                            ForEach(Array(viewModel.neuralNetwork.configuration.layers.enumerated()), id: \.0) { (index, layerConfig) in
-                                VStack {
-                                    ValueSlider(name: "Number of neurons", value: $viewModel.neuralNetwork.configuration.layers[index].neuronCount.double, range: 1...20, step: 1, decimalPoints: 0)
-                                    if viewModel.neuralNetwork.configuration.layers.count > 1 {
-                                        Button("Remove") {
-                                            viewModel.neuralNetwork.configuration.layers.remove(at: index)
-                                        }
-                                    }
-                                }
-                                .tabItem { Text("Layer \(index + 1)") }
-                            }
-                        }
-
-                        Button("Add layer") {
-                            viewModel.neuralNetwork.configuration.layers.append(.init(neuronCount: 10))
                         }
                     }
+
                     Spacer()
                 }
+                
+                VStack {
+                    SwiftUI.Label("Layers", systemImage: "square.2.layers.3d").font(.title2)
+                    TabView {
+                        ForEach(Array(viewModel.neuralNetwork.configuration.layers.enumerated()), id: \.0) { (index, layerConfig) in
+                            VStack {
+                                ValueSlider(name: "Number of neurons", value: $viewModel.neuralNetwork.configuration.layers[index].neuronCount.double, range: 1...20, step: 1, decimalPoints: 0)
+                                if viewModel.neuralNetwork.configuration.layers.count > 1 {
+                                    Button("Remove") {
+                                        viewModel.neuralNetwork.configuration.layers.remove(at: index)
+                                    }
+                                }
+                            }
+                            .tabItem { Text("Layer \(index + 1)") }
+                        }
+                    }
+                }
             }
+
             VStack {
+                Button("Add layer") {
+                    viewModel.neuralNetwork.configuration.layers.append(.init(neuronCount: 10))
+                }
+
                 HStack {
                     if viewModel.state == .training {
                         ProgressView()
@@ -191,8 +199,8 @@ struct NeuralNetworkView: View {
                     .disabled(viewModel.state == .training)
                 }
 
-                Text("Training Data Set Accuracy: \(viewModel.trainingDataSetAccuracy().formatted(.percent.precision(.significantDigits(3))))")
-                Text("Test Data Set Accuracy: \(viewModel.testDataSetAccuracy().formatted(.percent.precision(.significantDigits(3))))")
+                Text("Training Data Set Accuracy: \(viewModel.trainingDataAccuracy.formatted(.percent.precision(.significantDigits(3))))")
+                Text("Test Data Set Accuracy: \(viewModel.testDataAccuracy.formatted(.percent.precision(.significantDigits(3))))")
             }
         }
     }
@@ -237,21 +245,6 @@ struct SampleImageView: View {
     }
 }
 
-func measure<T>(_ name: String, _ f: () async -> T) async -> T {
-    print("Starting '\(name)'")
-
-    let start = CFAbsoluteTimeGetCurrent()
-    let result = await f()
-    let end = CFAbsoluteTimeGetCurrent()
-
-    let diff = end - start
-    let duration = diff < 1 ? "\(Int(diff * 1000))ms" : "\(diff)s"
-
-    print("'\(name)' took \(duration)")
-
-    return result
-}
-
 struct MNISTData {
     let training: MNISTParser.DataSet
     let testing: MNISTParser.DataSet
@@ -261,17 +254,24 @@ struct MNISTData {
 
 private func loadTrainingData() async -> MNISTData {
     return await Task.detached { () -> MNISTData in
-        let trainingImages = Bundle.main.url(forResource: "train-images-idx3-ubyte", withExtension: nil)!
-        let trainingLabels = Bundle.main.url(forResource: "train-labels-idx1-ubyte", withExtension: nil)!
+        return measure("Loading training data") {
+            let trainingImages = Bundle.main.url(forResource: "train-images-idx3-ubyte", withExtension: nil)!
+            let trainingLabels = Bundle.main.url(forResource: "train-labels-idx1-ubyte", withExtension: nil)!
 
-        let testImages = Bundle.main.url(forResource: "t10k-images-idx3-ubyte", withExtension: nil)!
-        let testLabels = Bundle.main.url(forResource: "t10k-labels-idx1-ubyte", withExtension: nil)!
+            let testImages = Bundle.main.url(forResource: "t10k-images-idx3-ubyte", withExtension: nil)!
+            let testLabels = Bundle.main.url(forResource: "t10k-labels-idx1-ubyte", withExtension: nil)!
 
-        let training = try! MNISTParser.loadData(imageSetFileURL: trainingImages, labelDataFileURL: trainingLabels)
+            #if DEBUG
+            let maxCount = 1000
+            #else
+            let maxCount: Int? = nil
+            #endif
 
-        let testing = try! MNISTParser.loadData(imageSetFileURL: testImages, labelDataFileURL: testLabels)
+            let training = try! MNISTParser.loadData(imageSetFileURL: trainingImages, labelDataFileURL: trainingLabels, maxCount: maxCount)
+            let testing = try! MNISTParser.loadData(imageSetFileURL: testImages, labelDataFileURL: testLabels, maxCount: maxCount)
 
-        return .init(training: training, testing: testing, all: training + testing)
+            return .init(training: training, testing: testing, all: training + testing)
+        }
     }.value
 }
 

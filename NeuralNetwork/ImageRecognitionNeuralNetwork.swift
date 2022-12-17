@@ -53,9 +53,11 @@ struct ImageRecognitionNeuralNetwork {
         let copy = self
 
         let trained = await Task.detached { () -> ImageRecognitionNeuralNetwork in
-            var copy = copy
-            copy.train()
-            return copy
+            return measure("Training NN") { [copy] in
+                var copy = copy
+                copy.train()
+                return copy
+            }
         }.value
 
         self = trained

@@ -34,7 +34,7 @@ struct TrainingLabelsFile {
 }
 
 enum MNISTParser {
-    static func parseImageSet(from url: URL) throws -> TrainingImageSetFile {
+    static func parseImageSet(from url: URL, maxCount: Int?) throws -> TrainingImageSetFile {
         let data = try Data(contentsOf: url)
         var parser = BigEndianDataParser(data: data)
 
@@ -43,7 +43,7 @@ enum MNISTParser {
         let rows = parser.parseUInt32()
         let columns = parser.parseUInt32()
 
-        let images = Array((0..<header.numberOfItems).lazy
+        let images = Array((0..<min(Int(header.numberOfItems), maxCount ?? .max)).lazy
             .map { _ in parser.parseArrayOfBytes(withCount: rows * columns) }
             .map(SampleImage.init))
 
@@ -55,13 +55,13 @@ enum MNISTParser {
         )
     }
 
-    static func parseLabels(from url: URL) throws -> TrainingLabelsFile {
+    static func parseLabels(from url: URL, maxCount: Int?) throws -> TrainingLabelsFile {
         let data = try Data(contentsOf: url)
         var parser = BigEndianDataParser(data: data)
 
         let header = parser.parseFileHeader()
 
-        let labels = parser.parseArrayOfBytes(withCount: header.numberOfItems)
+        let labels = parser.parseArrayOfBytes(withCount: min(header.numberOfItems, maxCount.map(UInt32.init) ?? .max))
             .map(Label.init)
 
         return TrainingLabelsFile(
@@ -98,11 +98,11 @@ enum MNISTParser {
         }
     }
 
-    static func loadData(imageSetFileURL: URL, labelDataFileURL: URL) throws -> DataSet {
-        let imageSet = try parseImageSet(from: imageSetFileURL)
-        let labels = try parseLabels(from: labelDataFileURL)
+    static func loadData(imageSetFileURL: URL, labelDataFileURL: URL, maxCount: Int?) throws -> DataSet {
+        let imageSet = try parseImageSet(from: imageSetFileURL, maxCount: maxCount)
+        let labels = try parseLabels(from: labelDataFileURL, maxCount: maxCount)
 
-        assert(imageSet.header.numberOfItems == labels.labels.count)
+        assert(imageSet.images.count == labels.labels.count)
 
         let items = zip(imageSet.images, labels.labels).map { ($0, $1) }
 
