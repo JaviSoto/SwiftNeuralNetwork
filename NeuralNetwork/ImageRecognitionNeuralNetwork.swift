@@ -65,7 +65,7 @@ struct ImageRecognitionNeuralNetwork {
         self = trained
     }
 
-    struct PredictionOutcome {
+    struct PredictionOutcome: Equatable {
         struct Digit: Equatable, Identifiable {
             let value: Int
             let confidence: Double
@@ -75,18 +75,18 @@ struct ImageRecognitionNeuralNetwork {
             }
         }
 
+        var digits: [Digit] {
+            didSet {
+                precondition(digits.count == 10)
+            }
+        }
+
         init() {
             self.digits = (0...9).map { Digit(value: $0, confidence: 0) }
         }
 
         init(digits: [Digit]) {
             self.digits = digits
-        }
-
-        var digits: [Digit] {
-            didSet {
-                precondition(digits.count == 10)
-            }
         }
 
         var highestDigit: Digit {

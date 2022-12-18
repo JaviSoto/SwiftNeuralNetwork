@@ -27,6 +27,7 @@
 		59D542F0294EAECA00919139 /* Matrix+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542EF294EAECA00919139 /* Matrix+Extensions.swift */; };
 		59D542F2294EAF0B00919139 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542F1294EAF0B00919139 /* Extensions.swift */; };
 		59D542F4294ECDDD00919139 /* DataSetListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542F3294ECDDD00919139 /* DataSetListView.swift */; };
+		59D542F6294EE5FD00919139 /* PredictionCorrectnessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542F5294EE5FD00919139 /* PredictionCorrectnessView.swift */; };
 		59F58AEB294AF793006FC86D /* ImageRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AEA294AF793006FC86D /* ImageRendering.swift */; };
 		59F58AED294AFCA0006FC86D /* NeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AEC294AFCA0006FC86D /* NeuralNetwork.swift */; };
 		59F58AF5294B01EE006FC86D /* NeuralNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AF4294B01EE006FC86D /* NeuralNetworkTests.swift */; };
@@ -69,6 +70,7 @@
 		59D542EF294EAECA00919139 /* Matrix+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Matrix+Extensions.swift"; sourceTree = "<group>"; };
 		59D542F1294EAF0B00919139 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		59D542F3294ECDDD00919139 /* DataSetListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSetListView.swift; sourceTree = "<group>"; };
+		59D542F5294EE5FD00919139 /* PredictionCorrectnessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionCorrectnessView.swift; sourceTree = "<group>"; };
 		59F58AEA294AF793006FC86D /* ImageRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageRendering.swift; sourceTree = "<group>"; };
 		59F58AEC294AFCA0006FC86D /* NeuralNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeuralNetwork.swift; sourceTree = "<group>"; };
 		59F58AF2294B01EE006FC86D /* NeuralNetworkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NeuralNetworkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -161,6 +163,7 @@
 				59D542DD294E717500919139 /* LearningAccuracyEvolutionGraph.swift */,
 				59D542E7294E7E0100919139 /* PredictionVisualizationView.swift */,
 				59D542EB294E801200919139 /* SampleImageView.swift */,
+				59D542F5294EE5FD00919139 /* PredictionCorrectnessView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -319,6 +322,7 @@
 				59D542E2294E75B600919139 /* NeuralNetworkViewModel.swift in Sources */,
 				59D542E8294E7E0100919139 /* PredictionVisualizationView.swift in Sources */,
 				59D542EA294E7F9B00919139 /* NeuralNetworkConfigurationView.swift in Sources */,
+				59D542F6294EE5FD00919139 /* PredictionCorrectnessView.swift in Sources */,
 				5957BCF1294A9F63001DF85D /* MNISTParser.swift in Sources */,
 				59D542F0294EAECA00919139 /* Matrix+Extensions.swift in Sources */,
 				59D542DE294E717500919139 /* LearningAccuracyEvolutionGraph.swift in Sources */,

@@ -68,9 +68,7 @@ final class NeuralNetworkViewModel: ObservableObject {
     }
 
     func predictions(forImage image: SampleImage) -> ImageRecognitionNeuralNetwork.PredictionOutcome {
-        return measure("Calculating predictions") {
-            return neuralNetwork.digitPredictions(withInputImage: image)
-        }
+        return neuralNetwork.digitPredictions(withInputImage: image)
     }
 
     private func updateAccuracies() {

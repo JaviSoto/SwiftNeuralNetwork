@@ -28,14 +28,13 @@ struct PredictionVisualizationView: View {
                             .font(.title)
 
                         HStack {
-                            Image(systemName: isCorrectPrediction ? "checkmark.circle.fill" : "x.circle.fill")
-                                .foregroundColor(isCorrectPrediction ? .green : .red)
+                            PredictionCorrectnessView(predictionOutcome: predictionOutcome, expectedLabel: item.label)
                             Text("Neural Net Output: \(predictionOutcome.highestDigit.value)")
                                 .foregroundColor(isCorrectPrediction ? .green : .red)
                                 .font(.title)
                         }
 
-                        SampleImageView(sampleImage: item.image, width: imageWidth)
+                        SampleImageView(sampleImage: item.image, width: imageWidth, lazy: false)
                             .frame(width: 300)
                     }
 
@@ -54,7 +53,6 @@ struct PredictionVisualizationView: View {
                     .onChange(of: tableOrder) { newOrder in
                         predictionOutcome.digits.sort(using: newOrder)
                     }
-                    .frame(height: 300)
                 }
             }
 

@@ -8,51 +8,63 @@
 import SwiftUI
 
 struct DataSetListView: View {
-    let trainingData: MNISTData
+    struct Item: Equatable, Identifiable {
+        let sample: MNISTParser.DataSet.Item
+        let predictionOutcome: ImageRecognitionNeuralNetwork.PredictionOutcome
 
-    @State
-    private var sortedItems: [MNISTParser.DataSet.Item] = []
+        var predictionCorrectness: PredictionCorrectness {
+            .init(predictionOutcome: predictionOutcome, expectedLabel: sample.label)
+        }
+
+        var id: MNISTParser.DataSet.Item.Identifier { sample.id }
+    }
+
+    let imageWidth: UInt32
+    let sortedItems: [Item]
 
     @Binding
-    private(set) var selectedItemID: MNISTParser.DataSet.Item.Identifier?
+    private(set) var selectedItemID: Item.ID?
 
     @Binding
-    private(set) var sortOrder: [KeyPathComparator<MNISTParser.DataSet.Item>]
-
-    private var imageWidth: UInt32 { trainingData.testing.imageWidth }
+    private(set) var sortOrder: [KeyPathComparator<Item>]
 
     var body: some View {
-        Table(sortedItems.items, selection: $selectedItemID, sortOrder: $sortOrder) {
-            TableColumn("ID", value: \.id) { item in
-                Text(verbatim: item.id.description)
+        Table(sortedItems, selection: $selectedItemID, sortOrder: $sortOrder) {
+            TableColumn("ID", value: \.sample.id) { item in
+                Text("\(item.sample.id.value)")
             }
-            .width(80)
+            .width(ideal: 25)
 
-            TableColumn("Digit", value: \.label) { item in
-                Text("\(item.label.representedNumber)")
+            TableColumn("Prediction", value: \.predictionCorrectness) { item in
+                PredictionCorrectnessView(correctness: item.predictionCorrectness)
+            }
+            .width(60)
+
+            TableColumn("Digit", value: \.sample.label) { item in
+                Text("\(item.sample.label.representedNumber)")
             }
             .width(50)
 
             TableColumn("Image") { item in
-                SampleImageView(sampleImage: item.image, width: imageWidth)
+                SampleImageView(sampleImage: item.sample.image, width: imageWidth)
                     .frame(height: 50)
             }
+            .width(50)
         }
-        .onChange(of: sortOrder) {
-            updateSortedItems()
-        }
-        .onAppear() {
-            updateSortedItems()
-        }
-    }
-
-    private func updateSortedItems() {
-        self.sortedItems = trainingData.all.sorted(using: sortOrder)
     }
 }
+
+#if DEBUG
 
 struct DataSetListView_Previews: PreviewProvider {
+    static var allItems: [DataSetListView.Item] {
+        return MNISTData.random.all.items.map { item in
+                .init(sample: item, predictionOutcome: .init())
+        }
+    }
     static var previews: some View {
-        DataSetListView(trainingData: .random, selectedItemID: .constant(nil), sortOrder: .constant([]))
+        DataSetListView(imageWidth: 28, sortedItems: allItems, selectedItemID: .constant(nil), sortOrder: .constant([]))
     }
 }
+
+#endif
