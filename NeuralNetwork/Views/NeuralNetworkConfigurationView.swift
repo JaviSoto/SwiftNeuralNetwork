@@ -27,7 +27,7 @@ struct NeuralNetworkConfigurationView: View {
                             let minMaxItems = min(viewModel.neuralNetwork.trainingData.items.count.double - 1, 500)
                             let maxMaxItems = viewModel.neuralNetwork.trainingData.items.count.double
 
-                            ValueSlider(name: "Iteration Batch Size", value: $viewModel.neuralNetwork.configuration.maxTrainingItems.double, range: minMaxItems...maxMaxItems, step: max(1, ((maxMaxItems - minMaxItems) / 30).rounded()), decimalPoints: 0)
+                            ValueSlider(name: "Iteration Batch Size", value: $viewModel.neuralNetwork.configuration.maxTrainingItems.double, range: minMaxItems...maxMaxItems, step: max(1, ((maxMaxItems - minMaxItems) / 100).rounded()), decimalPoints: 0)
 
                             ValueSlider(name: "Iterations", value: $viewModel.neuralNetwork.configuration.iterations.double, range: 1...3000, step: 100, decimalPoints: 0)
 
@@ -82,6 +82,7 @@ struct NeuralNetworkConfigurationView: View {
                 Section {
                     GroupBox(label: SwiftUI.Label("Accuracy Evolution", systemImage: "chart.line.uptrend.xyaxis").font(.title2)) {
                         LearningAccuracyEvolutionGraph(sessions: viewModel.trainingSessionsAccuracies)
+                            .frame(height: 200)
                             .padding()
                     }
                 }
