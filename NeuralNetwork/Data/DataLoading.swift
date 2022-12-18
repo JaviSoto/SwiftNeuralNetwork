@@ -30,8 +30,8 @@ enum DataLoading {
                 let maxCount: Int? = nil
     #endif
 
-                let training = try! MNISTParser.loadData(imageSetFileURL: trainingImages, labelDataFileURL: trainingLabels, maxCount: maxCount)
-                let testing = try! MNISTParser.loadData(imageSetFileURL: testImages, labelDataFileURL: testLabels, maxCount: maxCount)
+                let training = try! MNISTParser.loadData(imageSetFileURL: trainingImages, labelDataFileURL: trainingLabels, category: .training, maxCount: maxCount)
+                let testing = try! MNISTParser.loadData(imageSetFileURL: testImages, labelDataFileURL: testLabels, category: .testing, maxCount: maxCount)
 
                 return .init(training: training, testing: testing, all: training + testing)
             }

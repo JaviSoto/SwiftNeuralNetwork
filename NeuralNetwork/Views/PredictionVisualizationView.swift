@@ -10,7 +10,6 @@ import SwiftUI
 struct PredictionVisualizationView: View {
     let item: MNISTParser.DataSet.Item?
     let imageWidth: UInt32
-    let updateImage: () -> Void
 
     @Binding
     var predictionOutcome: ImageRecognitionNeuralNetwork.PredictionOutcome
@@ -63,10 +62,8 @@ struct PredictionVisualizationView: View {
 
             Divider()
 
-            Button("Random image") {
-                updateImage()
-            }
         }
+        .navigationSubtitle(item.map { "Selected item '\(String(describing: $0.id))'" } ?? "")
         .padding(.vertical)
     }
 }
@@ -78,7 +75,6 @@ struct PredictionVisualizationView_Previews: PreviewProvider {
         PredictionVisualizationView(
             item: MNISTParser.DataSet.randomItem,
             imageWidth: MNISTParser.DataSet.imageWidth,
-            updateImage: { },
             predictionOutcome: .constant(.init(digits: (0...9).map { digit in
                     .init(value: digit, confidence: Double.random(in: 0...1))
             })),

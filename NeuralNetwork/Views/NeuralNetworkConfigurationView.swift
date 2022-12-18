@@ -103,6 +103,7 @@ struct NeuralNetworkConfigurationView: View {
                 .disabled(viewModel.state == .training)
             }
         }
+        .listStyle(.sidebar)
         .padding(.vertical)
         .frame(minWidth: 300)
         .navigationTitle("Configuration")

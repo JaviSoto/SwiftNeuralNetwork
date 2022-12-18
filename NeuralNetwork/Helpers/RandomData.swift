@@ -13,7 +13,8 @@ extension MNISTParser.DataSet {
     static let imageWidth: UInt32 = 28
 
     static var randomItem: MNISTParser.DataSet.Item {
-        return (
+        return .init(
+            id: .init(category: .allCases.randomElement()!, value: Int.random(in: 0..<100)),
             image: .init(pixels: Array(0..<(imageWidth * imageWidth)).map { _ in UInt8.random(in: 0...UInt8.max) }),
             label: .init(representedNumber: (UInt8(0)...9).randomElement()!)
         )

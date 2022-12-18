@@ -12,8 +12,12 @@ struct SampleImage: Equatable {
     let pixels: [Pixel]
 }
 
-struct Label: Equatable {
+struct Label: Equatable, Comparable {
     let representedNumber: UInt8
+
+    static func < (lhs: Label, rhs: Label) -> Bool {
+        return lhs.representedNumber < rhs.representedNumber
+    }
 }
 
 struct MINSTFileHeader {
@@ -71,7 +75,52 @@ enum MNISTParser {
     }
 
     struct DataSet {
-        typealias Item = (image: SampleImage, label: Label)
+        enum Category: Hashable, Comparable, CaseIterable, CustomStringConvertible {
+            case training
+            case testing
+
+            var description: String {
+                switch self {
+                case .training: return "Training"
+                case .testing: return "Testing"
+                }
+            }
+        }
+
+        struct Item: Identifiable, Hashable {
+            struct Identifier: Hashable, Comparable, CustomStringConvertible {
+                let category: Category
+                let value: Int
+
+                var description: String {
+                    return "\(category) \(value)"
+                }
+
+                static func < (lhs: Identifier, rhs: Identifier) -> Bool {
+                    guard lhs.category == rhs.category else { return lhs.category < rhs.category }
+
+                    return lhs.value < rhs.value
+                }
+            }
+
+            let id: Identifier
+            let image: SampleImage
+            let label: Label
+
+            init(id: Identifier, image: SampleImage, label: Label) {
+                self.id = id
+                self.image = image
+                self.label = label
+            }
+
+            static func == (lhs: Item, rhs: Item) -> Bool {
+                return lhs.id == rhs.id
+            }
+
+            func hash(into hasher: inout Hasher) {
+                hasher.combine(id)
+            }
+        }
 
         let imageWidth: UInt32
         var items: [Item]
@@ -98,13 +147,15 @@ enum MNISTParser {
         }
     }
 
-    static func loadData(imageSetFileURL: URL, labelDataFileURL: URL, maxCount: Int?) throws -> DataSet {
+    static func loadData(imageSetFileURL: URL, labelDataFileURL: URL, category: DataSet.Category, maxCount: Int?) throws -> DataSet {
         let imageSet = try parseImageSet(from: imageSetFileURL, maxCount: maxCount)
         let labels = try parseLabels(from: labelDataFileURL, maxCount: maxCount)
 
         precondition(imageSet.images.count == labels.labels.count)
 
-        let items = zip(imageSet.images, labels.labels).map { ($0, $1) }
+        let items = zip(imageSet.images, labels.labels).enumerated().map { (index, element) in
+            DataSet.Item(id: .init(category: category, value: index + 1), image: element.0, label: element.1)
+        }
 
         return DataSet(imageWidth: imageSet.numberOfRows, items: items)
     }
