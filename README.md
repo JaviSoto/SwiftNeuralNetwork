@@ -7,4 +7,4 @@ This is roughly based on https://www.youtube.com/watch?v=w8yWXqWQYmU and other l
 
 There are much better ways of doing what I'm doing here, like using `Accelerate`'s `BNNS` APIs, or `CoreML`. This was very much a learning excercise for me.
 
-<img width="819" alt="IMG_0729" src="https://user-images.githubusercontent.com/666807/208026051-623b8fea-de34-4877-9619-ff259f833b46.png">
+<img width="1822" alt="image" src="https://user-images.githubusercontent.com/666807/208285404-7b45bc51-7393-4a61-bceb-0919d48d9275.png">
