@@ -83,6 +83,10 @@ final class NeuralNetworkViewModel: ObservableObject {
         }
     }
 
+    func stopTraining() {
+        trainingProgressObserver.shouldStopTraining.value = true
+    }
+
     func predictions(forImage image: SampleImage) -> ImageRecognitionNeuralNetwork.PredictionOutcome {
         return neuralNetwork.digitPredictions(withInputImage: image)
     }

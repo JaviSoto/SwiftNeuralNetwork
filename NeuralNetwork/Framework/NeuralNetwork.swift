@@ -88,8 +88,14 @@ struct NeuralNetwork {
         progressObserver.accuracies = []
         progressObserver.layerState = self.layers.map { .init(layer: $0, forwardPropagation: nil) }
         progressObserver.accuracies.reserveCapacity(iterations)
+        progressObserver.shouldStopTraining.value = false
 
         for i in 0..<iterations {
+            guard !progressObserver.shouldStopTraining.value else {
+                print("Stopped training after \(i) iterations")
+                break
+            }
+
             let trainingIndicesToUse = (0..<validationData.rows).shuffled().prefix(sampleLimit)
             let inputData = trainingData.columns(trainingIndicesToUse)
             let validationData = validationData.rows(trainingIndicesToUse)
@@ -136,6 +142,8 @@ extension NeuralNetwork {
             let layer: Layer
             let forwardPropagation: NeuralNetwork.LayerForwardPropagationResult?
         }
+
+        let shouldStopTraining: AtomicBool = false
 
         @Published
         fileprivate(set) var accuracies: TrainingSessionAccuracyProgress = []

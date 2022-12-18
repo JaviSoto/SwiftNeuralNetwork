@@ -113,12 +113,16 @@ struct NeuralNetworkConfigurationView: View {
 
             HStack(spacing: 10) {
                 if viewModel.state == .training {
+                    Button("Stop training session") {
+                        viewModel.stopTraining()
+                    }
+
                     ProgressView()
+                } else {
+                    Button("Train neural network") {
+                        viewModel.train()
+                    }
                 }
-                Button("Train neural network") {
-                    viewModel.train()
-                }
-                .disabled(viewModel.state == .training)
             }
         }
         .listStyle(.sidebar)

@@ -106,3 +106,28 @@ public extension ClosedRange where Bound == Double {
         return range.interpolating(by: clampedInterpolation(for: value))
     }
 }
+
+import os
+
+final class AtomicBool {
+    private let lockedBool: OSAllocatedUnfairLock<Bool>
+
+    init(_ value: Bool) {
+        self.lockedBool = .init(initialState: value)
+    }
+
+    var value: Bool {
+        get {
+            return lockedBool.withLock { $0 }
+        }
+        set {
+            lockedBool.withLock { $0 = newValue }
+        }
+    }
+}
+
+extension AtomicBool: ExpressibleByBooleanLiteral {
+    convenience init(booleanLiteral value: BooleanLiteralType) {
+        self.init(value)
+    }
+}
