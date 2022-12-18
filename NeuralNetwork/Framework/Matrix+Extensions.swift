@@ -102,6 +102,44 @@ extension Matrix {
 
         return values
     }
+
+    func rows(_ rows: some RandomAccessCollection<Int>) -> Matrix {
+        precondition(rows.count > 0)
+        precondition(rows.count <= self.rows)
+        precondition(rows.allSatisfy { $0 >= 0 && $0 < self.rows })
+
+        var matrix = Matrix(rows: rows.count, columns: columns, repeatedValue: 0)
+
+        for (rowIndex, row) in rows.enumerated() {
+            for column in 0..<columns {
+                matrix[rowIndex, column] = self[row, column]
+            }
+        }
+
+        precondition(matrix.rows == rows.count)
+        precondition(matrix.columns == columns)
+
+        return matrix
+    }
+
+    func columns(_ columns: some RandomAccessCollection<Int>) -> Matrix {
+        precondition(columns.count > 0)
+        precondition(columns.count <= self.columns)
+        precondition(columns.allSatisfy { $0 >= 0 && $0 < self.columns })
+
+        var matrix = Matrix(rows: rows, columns: columns.count, repeatedValue: 0)
+
+        for row in 0..<rows {
+            for (columnIndex, column) in columns.enumerated() {
+                matrix[row, columnIndex] = self[row, column]
+            }
+        }
+
+        precondition(matrix.rows == rows)
+        precondition(matrix.columns == columns.count)
+
+        return matrix
+    }
 }
 
 extension Matrix {

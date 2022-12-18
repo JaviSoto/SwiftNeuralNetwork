@@ -30,8 +30,6 @@ struct ImageRecognitionNeuralNetwork {
     init(trainingData: MNISTParser.DataSet) {
         self.trainingData = trainingData
 
-        self.configuration.maxTrainingItems = min(self.configuration.maxTrainingItems, self.trainingData.items.count)
-
         resetNeuralNetwork()
     }
 
@@ -46,6 +44,7 @@ struct ImageRecognitionNeuralNetwork {
         neuralNetwork.train(
             usingTrainingData: training,
             validationData: validation,
+            limitToSamples: min(self.configuration.maxTrainingItems, self.trainingData.items.count),
             iterations: configuration.iterations,
             learningRate: configuration.learningRate,
             progressObserver: observer
@@ -124,8 +123,8 @@ private extension SampleImage {
 
 extension MNISTParser.DataSet {
     var trainingAndValidationMatrixes: (training: Matrix, validation: Matrix) {
-        let training = Matrix(self.items.map { $0.image.normalizedPixelVector })′
-        let validation = Matrix(self.items.map { [Double($0.label.representedNumber)] })
+        let training = Matrix(self.items.lazy.map { $0.image.normalizedPixelVector })′
+        let validation = Matrix(self.items.lazy.map { [Double($0.label.representedNumber)] })
 
         return (training, validation)
     }

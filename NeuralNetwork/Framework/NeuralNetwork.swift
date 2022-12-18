@@ -71,22 +71,30 @@ struct NeuralNetwork {
     /// - Parameters:
     ///   - trainingData: The data to feed ot the input layer of the NN (X). Each column must be an example, with its rows being the data.
     ///   - validationData: The expected data at the output of the NN (Y). Each row must be an example, with only 1 column.
+    ///   - limitToSamples: A number equal or less than the size of `trainingData` to use in each iteration.
     ///   - iterations: How many iterations to run.
     ///   - learnignRate: How much change each iteration should have towards learning.
     ///   - progressObserver: An object you can observe to get updates on the training.
-    mutating func train(usingTrainingData trainingData: Matrix, validationData: Matrix, iterations: Int, learningRate: Double, progressObserver: TrainingProgressObserver) {
+    mutating func train(usingTrainingData trainingData: Matrix, validationData: Matrix, limitToSamples sampleLimit: Int, iterations: Int, learningRate: Double, progressObserver: TrainingProgressObserver) {
         precondition(!layers.isEmpty)
         precondition(trainingData.columns == validationData.rows)
         precondition(validationData.rows > validationData.columns)
         precondition(layers.last!.neuronCount == outputLayerSize)
+        precondition(sampleLimit <= trainingData.columns)
 
         progressObserver.accuracies = []
         progressObserver.accuracies.reserveCapacity(iterations)
 
         for i in 0..<iterations {
-            let forwardProp = forwardPropagation(inputData: trainingData)
-            let backwardsProp = backwardsPropagation(usingTrainingData: trainingData, validationData: validationData, forwardPropagationResults: forwardProp)
+            let trainingIndicesToUse = (0..<validationData.rows).shuffled().prefix(sampleLimit)
+            let inputData = trainingData.columns(trainingIndicesToUse)
+            let validationData = validationData.rows(trainingIndicesToUse)
 
+            precondition(trainingData.columns == validationData.rows)
+
+            let forwardProp = forwardPropagation(inputData: inputData)
+            let backwardsProp = backwardsPropagation(usingTrainingData: inputData, validationData: validationData, forwardPropagationResults: forwardProp)
+ 
             for (layerIndex, layerBackPropResult) in backwardsProp.enumerated() {
                 self.updateParameters(inLayerAtIndex: layerIndex, using: layerBackPropResult, learningRate: learningRate)
             }

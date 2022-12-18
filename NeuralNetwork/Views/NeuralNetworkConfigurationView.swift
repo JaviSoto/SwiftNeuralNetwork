@@ -27,12 +27,11 @@ struct NeuralNetworkConfigurationView: View {
                             let minMaxItems = min(viewModel.neuralNetwork.trainingData.items.count.double - 1, 500)
                             let maxMaxItems = viewModel.neuralNetwork.trainingData.items.count.double
 
-                            ValueSlider(name: "Max items", value: $viewModel.neuralNetwork.configuration.maxTrainingItems.double, range: minMaxItems...maxMaxItems, step: max(1, ((maxMaxItems - minMaxItems) / 20).rounded()), decimalPoints: 0)
+                            ValueSlider(name: "Iteration Batch Size", value: $viewModel.neuralNetwork.configuration.maxTrainingItems.double, range: minMaxItems...maxMaxItems, step: max(1, ((maxMaxItems - minMaxItems) / 20).rounded()), decimalPoints: 0)
 
-                            ValueSlider(name: "Iterations", value: $viewModel.neuralNetwork.configuration.iterations.double, range: 1...1500, step: 100, decimalPoints: 0)
+                            ValueSlider(name: "Iterations", value: $viewModel.neuralNetwork.configuration.iterations.double, range: 1...3000, step: 100, decimalPoints: 0)
 
                             ValueSlider(name: "Learning Rate", value: $viewModel.neuralNetwork.configuration.learningRate, range: 0.01...1, step: 0.05, decimalPoints: 2)
-
                         }
                     }
                 }

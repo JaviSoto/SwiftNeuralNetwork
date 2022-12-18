@@ -33,7 +33,7 @@ struct PredictionVisualizationView: View {
                                 .foregroundColor(isCorrectPrediction ? .green : .red)
                             Text("Neural Net Output: \(predictionOutcome.highestDigit.value)")
                                 .foregroundColor(isCorrectPrediction ? .green : .red)
-                                .font(.title2)
+                                .font(.title)
                         }
 
                         SampleImageView(sampleImage: item.image, width: imageWidth)
