@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftMatrix
+import Accelerate
 
 struct LayerStatusView: View {
     enum Visualization: CaseIterable {
@@ -23,76 +24,132 @@ struct LayerStatusView: View {
         }
     }
 
-    private let layers: [LayerState]
+    private let layers: [NeuralNetwork.TrainingProgressObserver.LayerState]
     let visualization: Visualization
 
+    @State
+    private var neuronFrames: [NeuronIndexPath: CGRect] = [:]
+
     init(layers: [NeuralNetwork.TrainingProgressObserver.LayerState], visualization: Visualization) {
-        self.layers = layers.map { LayerState(layerState: $0, visualization: visualization) }
+        self.layers = layers
         self.visualization = visualization
-    }
-
-    fileprivate struct LayerState {
-        let layerState: NeuralNetwork.TrainingProgressObserver.LayerState
-        let weightRange: WeightRange
-
-        struct WeightRange {
-            let minValue: Double
-            let maxValue: Double
-        }
-
-        init(layerState: NeuralNetwork.TrainingProgressObserver.LayerState, visualization: Visualization) {
-            self.layerState = layerState
-
-            self.weightRange = .init(
-                minValue: min(layerState.matrixToVisualize(with: visualization)),
-                maxValue: max(layerState.matrixToVisualize(with: visualization))
-            )
-        }
     }
 
     fileprivate static let coordinateSpaceName = "LayerStatusView"
 
     var body: some View {
-        HStack(spacing: 100) {
-            ForEach(layers.indexed) { layer in
-                VStack {
-                    let isLastLayer = layer.index == layers.count - 1
-                    Text(isLastLayer ? "Output Layer" : "Layer \(layer.index + 1)")
-                        .bold()
+        ZStack {
+            HStack {
+                ForEach(layers.indexed) { layer in
+                    Spacer()
+                    VStack {
+                        let isLastLayer = layer.index == layers.count - 1
+                        Text(isLastLayer ? "Output Layer" : "Layer \(layer.index + 1)")
+                            .bold()
 
-                    let matrixToVisualize = layer.item.layerState.matrixToVisualize(with: visualization)
+                        let matrixToVisualize = layer.item.matrixToVisualize(with: visualization)
 
-                    ForEach((0..<layer.item.layerState.layer.neuronCount).indexed) { neuron in
-                        let imageWidth: UInt32 = matrixToVisualize.columns > 10
-                        ? UInt32(matrixToVisualize.columns.double.squareRoot())
-                        : 1
+                        ForEach((0..<layer.item.layer.neuronCount).indexed) { neuron in
+                            let imageWidth: UInt32 = matrixToVisualize.columns > 10
+                            ? UInt32(matrixToVisualize.columns.double.squareRoot())
+                            : 1
 
-                        NeuronView(
-                            imageWidth: imageWidth,
-                            neuronIndex: neuron.index,
-                            neuronWeight: matrixToVisualize.rows([neuron.index]),
-                            weightRange: layer.item.weightRange
-                        )
-                        .overlayingCoordinates()
+                            NeuronView(
+                                imageWidth: imageWidth,
+                                neuronIndexPath: .init(layerIndex: layer.index, neuronIndex: neuron.index),
+                                neuronMatrix: matrixToVisualize.rows([neuron.index])
+                            )
+                        }
                     }
+                    Spacer()
                 }
             }
+
+            BiasLines(
+                layers: layers,
+                neuronFrames: neuronFrames
+            )
         }
         .coordinateSpace(name: Self.coordinateSpaceName)
+        .onPreferenceChange(NeuronViewFrameKey.self) { neuronFrames in
+            self.neuronFrames = neuronFrames
+        }
         .frame(maxWidth: .greatestFiniteMagnitude)
     }
 }
 
-extension View {
-    func overlayingCoordinates() -> some View {
-        return self.overlay(GeometryReader { proxy in
-            let frame = proxy.frame(in: .named(LayerStatusView.coordinateSpaceName))
+private struct BiasLines: View {
+    let layers: [NeuralNetwork.TrainingProgressObserver.LayerState]
+    let neuronFrames: [NeuronIndexPath: CGRect]
 
-            Text("(\(Int(frame.origin.x)),\(Int(frame.origin.y)))")
-                .frame(maxWidth: .greatestFiniteMagnitude)
-                .lineLimit(0)
+    var body: some View {
+        if layers.isEmpty {
+            EmptyView()
+        } else {
+            let biasRange = vDSP.minimum(layers.map { min($0.layer.biases) })...vDSP.maximum(layers.map { max($0.layer.biases) })
 
-        })
+            ForEach(layers.dropLast().indexed) { layer in
+                ForEach((0..<layer.item.layer.neuronCount).indexed) { neuron in
+                    let startIndexPath = NeuronIndexPath(layerIndex: layer.index, neuronIndex: neuron.index)
+                    if let start = neuronFrames[startIndexPath] {
+                        // Start points to the (1, 0.5) point
+                        let start = start.offsetBy(
+                            dx: start.size.width,
+                            dy: start.size.height / 2
+                        )
+                        ForEach((0..<layers[layer.index + 1].layer.neuronCount).indexed) { nextLayerNeuron in
+                            let endIndexPath = NeuronIndexPath(layerIndex: layer.index + 1, neuronIndex: nextLayerNeuron.index)
+                            if let end = neuronFrames[endIndexPath] {
+                                BiasLine(
+                                    bias: layers[layer.index].layer.biases.row(neuron.index)[0],
+                                    biasRange: biasRange,
+                                    neuronIndex: neuron.index,
+                                    neuronCount: layer.item.layer.neuronCount,
+                                    startFrame: start,
+                                    endFrame: end
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct BiasLine: View {
+    let bias: Double
+    let biasRange: ClosedRange<Double>
+    let neuronIndex: Int
+    let neuronCount: Int
+    let startFrame: CGRect
+    let endFrame: CGRect
+
+    var body: some View {
+        let relativeBias: Double = bias > 0
+        ? (0...biasRange.upperBound).projecting(clamped: bias, into: 0...1)
+        : (biasRange.lowerBound...0).projecting(clamped: bias, into: 0...1)
+
+        let lineWidth: Double = relativeBias * 5
+        let lineColor: Color = bias > 0
+        ? Color.blue.opacity(abs(relativeBias))
+        : Color.red.opacity(abs(relativeBias))
+
+        Path { path in
+            // End points to the (0, 0.5) point
+            let offsetEnd = endFrame.offsetBy(
+                dx: 0,
+                dy: endFrame.size.height / 2
+            )
+            let curveControlPoint: CGRect = startFrame.offsetBy(
+                dx: 100,
+                dy: Double((Double(neuronIndex) - Double(neuronCount / 2)) * 25)
+            )
+            path.move(to: startFrame.origin)
+            path.addQuadCurve(to: offsetEnd.origin, control: curveControlPoint.origin)
+        }
+        .strokedPath(.init(lineWidth: lineWidth))
+        .foregroundColor(lineColor)
     }
 }
 
@@ -123,32 +180,30 @@ private struct NeuronIndexPath: Hashable {
     let neuronIndex: Int
 }
 
-//private struct NeuronViewPositionKey: PreferenceKey {
-//    static var defaultValue: [NeuronIndexPath: CGSize] { [:] }
-//    static func reduce(value: inout [UUID:CGSize], nextValue: () -> [UUID:CGSize]) {
-//        let next = nextValue()
-//        if let item = next.first {
-//            value[item.key] = item.value
-//        }
-//    }
-//}
+private struct NeuronViewFrameKey: PreferenceKey {
+    static var defaultValue: [NeuronIndexPath: CGRect] { [:] }
+
+    static func reduce(value: inout [NeuronIndexPath: CGRect], nextValue: () -> [NeuronIndexPath: CGRect]) {
+        for (key, newValue) in nextValue() {
+            value[key] = newValue
+        }
+    }
+}
 
 private struct NeuronView: View {
+    let indexPath: NeuronIndexPath
     let imageWidth: UInt32
-    let neuronIndex: Int
-    let neuronWeight: Matrix
-    let weightRange: LayerStatusView.LayerState.WeightRange
+    let neuronMatrix: Matrix
 
     let pixels: [ColorPixel]
 
-    init(imageWidth: UInt32, neuronIndex: Int, neuronWeight: Matrix, weightRange: LayerStatusView.LayerState.WeightRange) {
-        assert(neuronWeight.rows == 1)
+    init(imageWidth: UInt32, neuronIndexPath: NeuronIndexPath, neuronMatrix: Matrix) {
+        assert(neuronMatrix.rows == 1)
 
         self.imageWidth = imageWidth
-        self.neuronIndex = neuronIndex
-        self.neuronWeight = neuronWeight
-        self.weightRange = weightRange
-        self.pixels = neuronWeight.pixels(minValue: weightRange.minValue, maxValue: weightRange.maxValue)
+        self.indexPath = neuronIndexPath
+        self.neuronMatrix = neuronMatrix
+        self.pixels = neuronMatrix.pixels(minValue: min(neuronMatrix), maxValue: max(neuronMatrix))
     }
 
     var body: some View {
@@ -156,10 +211,19 @@ private struct NeuronView: View {
             PixelArrayImageView(pixels: pixels, width: imageWidth, lazy: false)
                 .frame(height: 100)
 
-            Text("\(neuronIndex)")
-                .blendMode(.colorDodge)
+            Text("\(indexPath.neuronIndex)")
+                .padding()
+                .foregroundColor(.white)
+                .blendMode(.plusLighter)
         }
         .clipShape(RoundedRectangle(cornerSize: CGSize(width: 5, height: 5)))
+        .overlay(GeometryReader { proxy in
+            let frame = proxy.frame(in: .named(LayerStatusView.coordinateSpaceName))
+
+            Rectangle()
+                .hidden()
+                .preference(key: NeuronViewFrameKey.self, value: [indexPath: frame])
+        })
     }
 }
 

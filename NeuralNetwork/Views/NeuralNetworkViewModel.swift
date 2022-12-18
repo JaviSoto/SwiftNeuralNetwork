@@ -15,7 +15,11 @@ final class NeuralNetworkViewModel: ObservableObject {
     private let testingInputAndValidationMatrixes: MNISTParser.DataSet.InputAndValidationMatrixes
 
     @Published
-    var neuralNetwork: ImageRecognitionNeuralNetwork
+    var neuralNetwork: ImageRecognitionNeuralNetwork {
+        didSet {
+            updateLayerState()
+        }
+    }
 
     enum State: Equatable {
         case idle
@@ -48,6 +52,7 @@ final class NeuralNetworkViewModel: ObservableObject {
 
         self.neuralNetwork = ImageRecognitionNeuralNetwork(trainingData: trainingData.training)
         self.updateAccuracies()
+        self.updateLayerState()
     }
 
     func train() {
@@ -103,6 +108,16 @@ final class NeuralNetworkViewModel: ObservableObject {
 
             self.trainingDataAccuracy = result.trainingDataAccuracy
             self.testDataAccuracy = result.testDataAccuracy
+        }
+    }
+
+    private func updateLayerState() {
+        let forwardPropagation = self.trainingLayerState.map(\.layer.neuronCount) == neuralNetwork.neuralNetwork.layers.map(\.neuronCount)
+        ? self.trainingLayerState.map(\.forwardPropagation)
+        : []
+
+        self.trainingLayerState = neuralNetwork.neuralNetwork.layers.enumerated().map { (index, layer) in
+                .init(layer: layer, forwardPropagation: forwardPropagation.isEmpty ? nil : forwardPropagation[index])
         }
     }
 }
