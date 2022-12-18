@@ -30,10 +30,24 @@ enum DataLoading {
                 let maxCount: Int? = nil
     #endif
 
-                let training = try! MNISTParser.loadData(imageSetFileURL: trainingImages, labelDataFileURL: trainingLabels, category: .training, maxCount: maxCount)
-                let testing = try! MNISTParser.loadData(imageSetFileURL: testImages, labelDataFileURL: testLabels, category: .testing, maxCount: maxCount)
+                final class Results: @unchecked Sendable {
+                    var training: MNISTParser.DataSet!
+                    var testing: MNISTParser.DataSet!
+                }
 
-                return .init(training: training, testing: testing, all: training + testing)
+                let results = Results()
+
+                DispatchQueue.concurrentPerform(iterations: 2) { index in
+                    switch index {
+                    case 0:
+                        results.training = try! MNISTParser.loadData(imageSetFileURL: trainingImages, labelDataFileURL: trainingLabels, category: .training, maxCount: maxCount)
+                    case 1:
+                        results.testing = try! MNISTParser.loadData(imageSetFileURL: testImages, labelDataFileURL: testLabels, category: .testing, maxCount: maxCount)
+                    default: fatalError()
+                    }
+                }
+
+                return .init(training: results.training, testing: results.testing, all: results.training + results.testing)
             }
         }.value
     }

@@ -19,13 +19,13 @@ struct NeuralNetwork {
     }
 
     struct Layer {
-        var weights: Matrix {
+        fileprivate(set) var weights: Matrix {
             didSet {
                 precondition(weights.rows == neuronCount)
                 precondition(weights.columns == oldValue.columns)
             }
         }
-        var biases: Matrix {
+        fileprivate(set) var biases: Matrix {
             didSet {
                 precondition(biases.rows == neuronCount)
                 precondition(biases.columns == oldValue.columns)
@@ -33,7 +33,7 @@ struct NeuralNetwork {
         }
 
         let neuronCount: Int
-        var activationFunction: ActivationFunction
+        fileprivate(set) var activationFunction: ActivationFunction
 
         init(previousLayerSize: Int, neurons: Int, activationFunction: ActivationFunction) {
             // Initialize weights and biases randomly
@@ -48,7 +48,7 @@ struct NeuralNetwork {
     let inputLayerNeuronCount: Int
     let outputLayerSize: Int
 
-    private var layers: [Layer] = []
+    private(set) var layers: [Layer] = []
 
     init(inputLayerNeuronCount: Int, outputLayerSize: Int) {
         self.inputLayerNeuronCount = inputLayerNeuronCount
@@ -83,6 +83,7 @@ struct NeuralNetwork {
         precondition(sampleLimit <= trainingData.columns)
 
         progressObserver.accuracies = []
+        progressObserver.layerState = self.layers.map { .init(layer: $0, forwardPropagation: nil) }
         progressObserver.accuracies.reserveCapacity(iterations)
 
         for i in 0..<iterations {
@@ -103,6 +104,7 @@ struct NeuralNetwork {
             let accuracy = Self.accuracy(ofOutput: neuralNetworkOutput, againstValidationData: validationData)
 
             progressObserver.accuracies.append(accuracy)
+            progressObserver.layerState = zip(layers, forwardProp).map { .init(layer: $0, forwardPropagation: $1) }
 
             if i.isMultiple(of: 10) {
                 print("Iteration \(i). Accuracy: \(Int(accuracy * 100))%")
@@ -127,8 +129,16 @@ extension NeuralNetwork {
     typealias TrainingSessionAccuracyProgress = [Double]
 
     final class TrainingProgressObserver: ObservableObject {
+        struct LayerState {
+            let layer: Layer
+            let forwardPropagation: NeuralNetwork.LayerForwardPropagationResult?
+        }
+
         @Published
         fileprivate(set) var accuracies: TrainingSessionAccuracyProgress = []
+
+        @Published
+        fileprivate(set) var layerState: [LayerState] = []
 
         init() {}
     }
@@ -136,7 +146,7 @@ extension NeuralNetwork {
 
 // MARK: - Implementation
 
-private extension NeuralNetwork {
+extension NeuralNetwork {
     struct LayerForwardPropagationResult {
         let weightsApplied: Matrix // Zn
         let activationFunctionApplied: Matrix // An
@@ -149,7 +159,7 @@ private extension NeuralNetwork {
     }
 
     /// - Returns: A `LayerForwardPropagationResult` value for each of the layers that the data flows through.
-    func forwardPropagation(inputData: Matrix) -> [LayerForwardPropagationResult] {
+    private func forwardPropagation(inputData: Matrix) -> [LayerForwardPropagationResult] {
         precondition(inputData.rows == inputLayerNeuronCount)
 
         var results: [LayerForwardPropagationResult] = []
@@ -172,7 +182,7 @@ private extension NeuralNetwork {
         return results
     }
 
-    func backwardsPropagation(usingTrainingData trainingData: Matrix, validationData: Matrix, forwardPropagationResults: [LayerForwardPropagationResult])  -> [LayerBackwardPropagationResult] {
+    private func backwardsPropagation(usingTrainingData trainingData: Matrix, validationData: Matrix, forwardPropagationResults: [LayerForwardPropagationResult])  -> [LayerBackwardPropagationResult] {
         precondition(forwardPropagationResults.count == layers.count)
 
         let trainingDataPoints = Double(trainingData.columns) // m
@@ -211,7 +221,7 @@ private extension NeuralNetwork {
         return backwardPropagationResults.reversed()
     }
 
-    mutating func updateParameters(inLayerAtIndex layerIndex: Int, using backwardPropagationResult: LayerBackwardPropagationResult, learningRate: Double) {
+    private mutating func updateParameters(inLayerAtIndex layerIndex: Int, using backwardPropagationResult: LayerBackwardPropagationResult, learningRate: Double) {
         layers[layerIndex].weights -= learningRate * backwardPropagationResult.weightDelta
         layers[layerIndex].biases -= learningRate * backwardPropagationResult.biasDelta
     }
@@ -219,7 +229,7 @@ private extension NeuralNetwork {
 
     /// - Parameter output: The output of the neural network. The shape is [outputLayerSize rows, trainingData columns]
     /// - Returns:A `Matrix` with a row for each training data point whose value is the predicted value for it.
-    static func getPredictions(usingOutput output: Matrix) -> Matrix {
+    private static func getPredictions(usingOutput output: Matrix) -> Matrix {
         var predictedValues: [[Double]] = []
         predictedValues.reserveCapacity(output.columns)
 
@@ -279,7 +289,7 @@ extension NeuralNetwork.ActivationFunction {
     static let softMax = NeuralNetwork.ActivationFunction(
         name: "softMax",
         function: {
-            let inputExp = exp($0) // TODO
+            let inputExp = exp($0)
             // Add a small epsilon to the demominator to avoid division by 0
             let result = inputExp / (inputExp.sumMatrix() + 1e-5)
             return result.assertValid()

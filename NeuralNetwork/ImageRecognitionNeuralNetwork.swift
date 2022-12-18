@@ -20,7 +20,7 @@ struct ImageRecognitionNeuralNetwork {
             var neuronCount: Int
         }
 
-        var maxTrainingItems: Int = 10000
+        var maxTrainingItems: Int = 5000
         var iterations: Int = 300
         var learningRate: Double = 0.03
 
@@ -36,13 +36,13 @@ struct ImageRecognitionNeuralNetwork {
     mutating func train(with observer: NeuralNetwork.TrainingProgressObserver) {
         resetNeuralNetwork()
 
-        let (training, validation) = trainingData
+        let (input, validation) = trainingData
             .shuffle()
             .cropped(maxLength: configuration.maxTrainingItems)
-            .trainingAndValidationMatrixes
+            .inputAndValidationMatrixes
 
         neuralNetwork.train(
-            usingTrainingData: training,
+            usingTrainingData: input,
             validationData: validation,
             limitToSamples: min(self.configuration.maxTrainingItems, self.trainingData.items.count),
             iterations: configuration.iterations,
@@ -122,11 +122,13 @@ private extension SampleImage {
 }
 
 extension MNISTParser.DataSet {
-    var trainingAndValidationMatrixes: (training: Matrix, validation: Matrix) {
-        let training = Matrix(self.items.lazy.map { $0.image.normalizedPixelVector })′
+    typealias InputAndValidationMatrixes = (input: Matrix, validation: Matrix)
+
+    var inputAndValidationMatrixes: InputAndValidationMatrixes {
+        let input = Matrix(self.items.lazy.map { $0.image.normalizedPixelVector })′
         let validation = Matrix(self.items.lazy.map { [Double($0.label.representedNumber)] })
 
-        return (training, validation)
+        return (input, validation)
     }
 }
 

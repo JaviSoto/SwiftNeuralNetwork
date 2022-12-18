@@ -46,7 +46,7 @@ struct DataSetListView: View {
             .width(50)
 
             TableColumn("Image") { item in
-                SampleImageView(sampleImage: item.sample.image, width: imageWidth)
+                PixelArrayImageView(sampleImage: item.sample.image, width: imageWidth)
                     .frame(height: 50)
             }
             .width(50)

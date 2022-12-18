@@ -38,12 +38,12 @@ struct NeuralNetworkConfigurationView: View {
 
                 Section {
                     GroupBox(label: SwiftUI.Label("Layers", systemImage: "square.2.layers.3d").font(.title2)) {
-                        ForEach(Array(viewModel.neuralNetwork.configuration.layers.enumerated()), id: \.0) { (index, layerConfig) in
+                        ForEach(viewModel.neuralNetwork.configuration.layers.indexed) { layerConfig in
                             VStack {
-                                let isOutputLayer = index == viewModel.neuralNetwork.configuration.layers.count - 1
+                                let isOutputLayer = layerConfig.index == viewModel.neuralNetwork.configuration.layers.count - 1
 
                                 HStack {
-                                    Text("\(index + 1):")
+                                    Text("\(layerConfig.index + 1):")
                                         .bold()
 
                                     if isOutputLayer {
@@ -54,7 +54,7 @@ struct NeuralNetworkConfigurationView: View {
 
                                     if viewModel.neuralNetwork.configuration.layers.count > 1 && !isOutputLayer {
                                         Button(action: {
-                                            viewModel.neuralNetwork.configuration.layers.remove(at: index)
+                                            viewModel.neuralNetwork.configuration.layers.remove(at: layerConfig.index)
                                         }, label: {
                                             Image(systemName: "minus.circle.fill")
                                         })
@@ -66,7 +66,7 @@ struct NeuralNetworkConfigurationView: View {
                                         .italic()
                                         .frame(alignment: .leading)
                                 } else {
-                                    ValueSlider(name: "Number of neurons", value: $viewModel.neuralNetwork.configuration.layers[index].neuronCount.double, range: 1...20, step: 1, decimalPoints: 0)
+                                    ValueSlider(name: "Number of neurons", value: $viewModel.neuralNetwork.configuration.layers[layerConfig.index].neuronCount.double, range: 1...20, step: 1, decimalPoints: 0)
                                 }
 
                                 Divider()
@@ -84,6 +84,13 @@ struct NeuralNetworkConfigurationView: View {
                         LearningAccuracyEvolutionGraph(sessions: viewModel.trainingSessionsAccuracies)
                             .frame(height: 200)
                             .padding()
+                    }
+                }
+
+                Section {
+                    GroupBox(label: SwiftUI.Label("Layer Visualization", systemImage: "eye.fill").font(.title2)) {
+                        LayerStatusView(layers: viewModel.trainingLayerState)
+                        .padding()
                     }
                 }
             }

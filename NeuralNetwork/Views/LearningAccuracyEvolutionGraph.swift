@@ -12,13 +12,13 @@ struct LearningAccuracyEvolutionGraph: View {
     let sessions: [NeuralNetwork.TrainingSessionAccuracyProgress]
 
     var body: some View {
-        Chart(Array(sessions.enumerated()), id: \.0) { (sessionIndex, session) in
-            ForEach(Array(session.enumerated()), id: \.0) { (index, accuracy) in
+        Chart(sessions.indexed) { session in
+            ForEach(session.item.indexed) { accuracy in
                 LineMark(
-                    x: .value("Epoch", index),
-                    y: .value("Accuracy", Int(accuracy * 100))
+                    x: .value("Epoch", accuracy.index),
+                    y: .value("Accuracy", Int(accuracy.item * 100))
                 )
-                .foregroundStyle(by: .value("Session", "\(sessionIndex + 1)"))
+                .foregroundStyle(by: .value("Session", "\(session.index + 1)"))
             }
         }
         .chartYScale(domain: 0...100, type: .linear)

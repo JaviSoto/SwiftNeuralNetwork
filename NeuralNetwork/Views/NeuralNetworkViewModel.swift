@@ -11,6 +11,9 @@ import Foundation
 final class NeuralNetworkViewModel: ObservableObject {
     private let trainingData: MNISTData
 
+    private let trainingInputAndValidationMatrixes: MNISTParser.DataSet.InputAndValidationMatrixes
+    private let testingInputAndValidationMatrixes: MNISTParser.DataSet.InputAndValidationMatrixes
+
     @Published
     var neuralNetwork: ImageRecognitionNeuralNetwork
 
@@ -32,10 +35,17 @@ final class NeuralNetworkViewModel: ObservableObject {
     @Published
     private(set) var trainingSessionsAccuracies: [NeuralNetwork.TrainingSessionAccuracyProgress] = []
 
+    @Published
+    private(set) var trainingLayerState: [NeuralNetwork.TrainingProgressObserver.LayerState] = []
+
     private let trainingProgressObserver = NeuralNetwork.TrainingProgressObserver()
 
     init(trainingData: MNISTData) {
         self.trainingData = trainingData
+
+        self.trainingInputAndValidationMatrixes = trainingData.training.inputAndValidationMatrixes
+        self.testingInputAndValidationMatrixes = trainingData.testing.inputAndValidationMatrixes
+
         self.neuralNetwork = ImageRecognitionNeuralNetwork(trainingData: trainingData.training)
         self.updateAccuracies()
     }
@@ -46,10 +56,11 @@ final class NeuralNetworkViewModel: ObservableObject {
         let trainingSessionIndex = trainingSessionsAccuracies.count
         trainingSessionsAccuracies.append([])
 
-        let token = trainingProgressObserver.$accuracies
+        let token = trainingProgressObserver.$accuracies.combineLatest(trainingProgressObserver.$layerState)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] accuracies in
+            .sink { [weak self] (accuracies, layerState) in
                 self?.trainingSessionsAccuracies[trainingSessionIndex] = accuracies
+                self?.trainingLayerState = layerState
             }
 
         Task {
@@ -73,11 +84,8 @@ final class NeuralNetworkViewModel: ObservableObject {
 
     private func updateAccuracies() {
         measure("Calculating accuracy") {
-            let (trainingImages, trainingLabels) = trainingData.training.trainingAndValidationMatrixes
-            trainingDataAccuracy = neuralNetwork.neuralNetwork.accuracy(usingInputData: trainingImages, expectedOutput: trainingLabels)
-
-            let (testImages, testLabels) = trainingData.testing.trainingAndValidationMatrixes
-            testDataAccuracy = neuralNetwork.neuralNetwork.accuracy(usingInputData: testImages, expectedOutput: testLabels)
+            trainingDataAccuracy = neuralNetwork.neuralNetwork.accuracy(usingInputData: trainingInputAndValidationMatrixes.input, expectedOutput: trainingInputAndValidationMatrixes.validation)
+            testDataAccuracy = neuralNetwork.neuralNetwork.accuracy(usingInputData: testingInputAndValidationMatrixes.input, expectedOutput: testingInputAndValidationMatrixes.validation)
         }
     }
 }

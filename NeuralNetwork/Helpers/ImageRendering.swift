@@ -8,7 +8,25 @@
 import Foundation
 import SwiftUI
 
-extension SampleImage {
+struct ColorPixel {
+    let red: UInt8
+    let green: UInt8
+    let blue: UInt8
+}
+
+extension SampleImage.Pixel {
+    var colorPixel: ColorPixel {
+        return .init(red: self, green: self, blue: self)
+    }
+}
+
+extension [SampleImage.Pixel] {
+    public func asSwiftUIImage(width: UInt32) -> SwiftUI.Image {
+        return self.map { $0.colorPixel }.asSwiftUIImage(width: width)
+    }
+}
+
+extension [ColorPixel] {
     public func asSwiftUIImage(width: UInt32) -> SwiftUI.Image {
         let cgImage = asCGImage(width: width)
 
@@ -25,7 +43,7 @@ extension SampleImage {
 
     private func asCGImage(width: UInt32) -> CGImage {
         let width = Int(width)
-        let pixels = pixels.map(\.sRGBAValue)
+        let pixels = self.map(\.sRGBAValue)
         precondition(pixels.count.isMultiple(of: width))
 
         let providerRef = CGDataProvider(data: NSData(bytes: pixels, length: pixels.count * 4))
@@ -46,18 +64,8 @@ extension SampleImage {
     }
 }
 
-extension SampleImage.Pixel {
+private extension ColorPixel {
     var sRGBAValue: UInt32 {
-        let color = UInt32(self)
-        return color << 24 + color << 16 + color << 8 + 255
+        return UInt32(red) << 24 + UInt32(green) << 16 + UInt32(blue) << 8 + 255
     }
 }
-
-#if DEBUG
-extension [Double] {
-    func asNSImage(width: UInt32) -> NSImage {
-        return SampleImage(pixels: self.map { UInt8($0 * 255) })
-            .asNSImage(width: width)
-    }
-}
-#endif

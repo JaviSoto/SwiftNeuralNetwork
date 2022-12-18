@@ -6,17 +6,12 @@
 //
 
 import SwiftUI
+import SwiftMatrix
 
-struct SampleImageView: View {
-    let sampleImage: SampleImage
+struct PixelArrayImageView: View {
+    let pixels: [ColorPixel]
     let width: UInt32
     let lazy: Bool
-
-    init(sampleImage: SampleImage, width: UInt32, lazy: Bool = true) {
-        self.sampleImage = sampleImage
-        self.width = width
-        self.lazy = lazy
-    }
 
     @State
     private var cachedImage: Image?
@@ -27,6 +22,12 @@ struct SampleImageView: View {
         } else {
             return loadImage()
         }
+    }
+
+    init(pixels: [ColorPixel], width: UInt32, lazy: Bool = true) {
+        self.pixels = pixels
+        self.width = width
+        self.lazy = lazy
     }
 
     var body: some View {
@@ -45,6 +46,12 @@ struct SampleImageView: View {
     }
 
     private func loadImage() -> Image {
-        return sampleImage.asSwiftUIImage(width: width)
+        return pixels.asSwiftUIImage(width: width)
+    }
+}
+
+extension PixelArrayImageView {
+    init(sampleImage: SampleImage, width: UInt32, lazy: Bool = true) {
+        self.init(pixels: sampleImage.pixels.map { $0.colorPixel }, width: width, lazy: lazy)
     }
 }

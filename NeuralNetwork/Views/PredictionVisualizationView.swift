@@ -34,7 +34,7 @@ struct PredictionVisualizationView: View {
                                 .font(.title)
                         }
 
-                        SampleImageView(sampleImage: item.image, width: imageWidth, lazy: false)
+                        PixelArrayImageView(sampleImage: item.image, width: imageWidth, lazy: false)
                             .frame(width: 300)
                     }
 
@@ -61,7 +61,9 @@ struct PredictionVisualizationView: View {
             Divider()
 
         }
+        #if os(macOS)
         .navigationSubtitle(item.map { "Selected item '\(String(describing: $0.id))'" } ?? "")
+        #endif
         .padding(.vertical)
     }
 }
