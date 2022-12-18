@@ -30,7 +30,7 @@ extension Double {
 struct IndexedCollection<Base: RandomAccessCollection>: RandomAccessCollection where Base.Index: Hashable {
     typealias Index = Base.Index
 
-    struct Element: Identifiable {
+    struct IndexedElement: Identifiable {
         let index: Base.Index
         let item: Base.Element
 
@@ -62,7 +62,7 @@ struct IndexedCollection<Base: RandomAccessCollection>: RandomAccessCollection w
         base.index(i, offsetBy: distance)
     }
 
-    subscript(position: Index) -> Element {
+    subscript(position: Index) -> IndexedElement {
         .init(index: position, item: base[position])
     }
 }

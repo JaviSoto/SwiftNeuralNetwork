@@ -9,10 +9,26 @@ import SwiftUI
 import SwiftMatrix
 
 struct LayerStatusView: View {
-    private let layers: [LayerState]
+    enum Visualization: CaseIterable {
+        case weights
+        case weightsApplied
+        case activations
 
-    init(layers: [NeuralNetwork.TrainingProgressObserver.LayerState]) {
-        self.layers = layers.map(LayerState.init)
+        var name: String {
+            switch self {
+            case .weights: return "Weights"
+            case .weightsApplied: return "Weights Applied"
+            case .activations: return "Activations"
+            }
+        }
+    }
+
+    private let layers: [LayerState]
+    let visualization: Visualization
+
+    init(layers: [NeuralNetwork.TrainingProgressObserver.LayerState], visualization: Visualization) {
+        self.layers = layers.map { LayerState(layerState: $0, visualization: visualization) }
+        self.visualization = visualization
     }
 
     fileprivate struct LayerState {
@@ -24,11 +40,12 @@ struct LayerStatusView: View {
             let maxValue: Double
         }
 
-        init(layerState: NeuralNetwork.TrainingProgressObserver.LayerState) {
+        init(layerState: NeuralNetwork.TrainingProgressObserver.LayerState, visualization: Visualization) {
             self.layerState = layerState
+
             self.weightRange = .init(
-                minValue: min(layerState.layer.weights),
-                maxValue: max(layerState.layer.weights)
+                minValue: min(layerState.matrixToVisualize(with: visualization)),
+                maxValue: max(layerState.matrixToVisualize(with: visualization))
             )
         }
     }
@@ -43,17 +60,20 @@ struct LayerStatusView: View {
                     Text(isLastLayer ? "Output Layer" : "Layer \(layer.index + 1)")
                         .bold()
 
+                    let matrixToVisualize = layer.item.layerState.matrixToVisualize(with: visualization)
+
                     ForEach((0..<layer.item.layerState.layer.neuronCount).indexed) { neuron in
-                        let imageWidth: UInt32 = layer.item.layerState.layer.weights.columns > 10
-                        ? UInt32(layer.item.layerState.layer.weights.columns.double.squareRoot())
+                        let imageWidth: UInt32 = matrixToVisualize.columns > 10
+                        ? UInt32(matrixToVisualize.columns.double.squareRoot())
                         : 1
 
                         NeuronView(
                             imageWidth: imageWidth,
                             neuronIndex: neuron.index,
-                            neuronWeight: layer.item.layerState.layer.weights.rows([neuron.index]),
+                            neuronWeight: matrixToVisualize.rows([neuron.index]),
                             weightRange: layer.item.weightRange
                         )
+                        .overlayingCoordinates()
                     }
                 }
             }
@@ -62,6 +82,56 @@ struct LayerStatusView: View {
         .frame(maxWidth: .greatestFiniteMagnitude)
     }
 }
+
+extension View {
+    func overlayingCoordinates() -> some View {
+        return self.overlay(GeometryReader { proxy in
+            let frame = proxy.frame(in: .named(LayerStatusView.coordinateSpaceName))
+
+            Text("(\(Int(frame.origin.x)),\(Int(frame.origin.y)))")
+                .frame(maxWidth: .greatestFiniteMagnitude)
+                .lineLimit(0)
+
+        })
+    }
+}
+
+private extension NeuralNetwork.TrainingProgressObserver.LayerState {
+    func matrixToVisualize(with visualization: LayerStatusView.Visualization) -> Matrix {
+        switch visualization {
+        case .weights:
+            return layer.weights
+
+            // These matrixes aren't square, so make them square to visualize them
+        case .weightsApplied:
+            return forwardPropagation?.weightsApplied.squareNumberOfColumns() ?? layer.weights
+        case .activations:
+            return forwardPropagation?.activationFunctionApplied.squareNumberOfColumns() ?? layer.weights
+        }
+    }
+}
+
+private extension Matrix {
+    func squareNumberOfColumns() -> Matrix {
+        let sizeSquareRoot = Int(columns.double.squareRoot().rounded(.down))
+        return columns(0..<(sizeSquareRoot * sizeSquareRoot))
+    }
+}
+
+private struct NeuronIndexPath: Hashable {
+    let layerIndex: Int
+    let neuronIndex: Int
+}
+
+//private struct NeuronViewPositionKey: PreferenceKey {
+//    static var defaultValue: [NeuronIndexPath: CGSize] { [:] }
+//    static func reduce(value: inout [UUID:CGSize], nextValue: () -> [UUID:CGSize]) {
+//        let next = nextValue()
+//        if let item = next.first {
+//            value[item.key] = item.value
+//        }
+//    }
+//}
 
 private struct NeuronView: View {
     let imageWidth: UInt32
@@ -98,20 +168,20 @@ private extension Matrix {
         assert(rows == 1)
 
         let column = self.row(0)
-        let range = (minValue...maxValue)
 
-        return column.lazy
-            .map { range.projecting(clamped: $0, into: -1...1) }
-            .map { value in
-                let brightness = UInt8(abs(value) * 255)
+        return column.map { value in
                 if value < 0 {
+                    let brightness = UInt8((minValue...0).projecting(clamped: value, into: 0...1) * 255)
                     return .init(red: brightness, green: 0, blue: 0)
                 } else {
+                    let brightness = UInt8((0...maxValue).projecting(clamped: value, into: 0...1) * 255)
                     return .init(red: 0, green: brightness, blue: 0)
                 }
             }
     }
 }
+
+#if DEBUG
 
 struct LayerStatusView_Previews: PreviewProvider {
     static var previews: some View {
@@ -119,7 +189,10 @@ struct LayerStatusView_Previews: PreviewProvider {
             layers: [
                 .init(layer: .init(previousLayerSize: 10, neurons: 10, activationFunction: .reLU), forwardPropagation: nil),
                 .init(layer: .init(previousLayerSize: 10, neurons: 5, activationFunction: .reLU), forwardPropagation: nil),
-            ]
+            ],
+            visualization: .weights
         )
     }
 }
+
+#endif

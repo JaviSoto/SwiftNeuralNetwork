@@ -22,7 +22,7 @@ struct ImageRecognitionNeuralNetwork {
 
         var maxTrainingItems: Int = 5000
         var iterations: Int = 300
-        var learningRate: Double = 0.03
+        var learningRate: Double = 0.06
 
         var layers: [LayerConfig] = [.init(neuronCount: 10), .init(neuronCount: 10)]
     }

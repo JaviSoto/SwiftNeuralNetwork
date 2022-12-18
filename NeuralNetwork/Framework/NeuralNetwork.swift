@@ -64,6 +64,7 @@ struct NeuralNetwork {
         precondition(!layers.isEmpty)
 
         let inputData = Matrix([data])′
+        // TODO: return all the layer activations to visualize them for a given input image?
         return forwardPropagation(inputData: inputData).last!.activationFunctionApplied
     }
 
@@ -76,6 +77,8 @@ struct NeuralNetwork {
     ///   - learnignRate: How much change each iteration should have towards learning.
     ///   - progressObserver: An object you can observe to get updates on the training.
     mutating func train(usingTrainingData trainingData: Matrix, validationData: Matrix, limitToSamples sampleLimit: Int, iterations: Int, learningRate: Double, progressObserver: TrainingProgressObserver) {
+        print("Starting to train with training elements = \(trainingData.columns), batch size = \(sampleLimit), iterations = \(iterations), learning rate = \(learningRate)")
+
         precondition(!layers.isEmpty)
         precondition(trainingData.columns == validationData.rows)
         precondition(validationData.rows > validationData.columns)
@@ -167,7 +170,7 @@ extension NeuralNetwork {
         var nextLayerInput = inputData
 
         for layer in layers {
-            let weightsApplied = layer.weights ° nextLayerInput + layer.biases // Zn
+            let weightsApplied = (layer.weights ° nextLayerInput) + layer.biases // Zn
             let activations = layer.activationFunction.function(weightsApplied).assertValid() // An
             nextLayerInput = activations
 

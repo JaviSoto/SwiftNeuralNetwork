@@ -13,6 +13,9 @@ struct NeuralNetworkConfigurationView: View {
     @ObservedObject
     private(set) var viewModel: NeuralNetworkViewModel
 
+    @State
+    var neuronVisualization: LayerStatusView.Visualization = .weights
+
     var body: some View {
         VStack {
             List {
@@ -89,7 +92,14 @@ struct NeuralNetworkConfigurationView: View {
 
                 Section {
                     GroupBox(label: SwiftUI.Label("Layer Visualization", systemImage: "eye.fill").font(.title2)) {
-                        LayerStatusView(layers: viewModel.trainingLayerState)
+                        Picker("Style", selection: $neuronVisualization) {
+                            ForEach(LayerStatusView.Visualization.allCases, id: \.self) { visualization in
+                                Text("\(visualization.name)")
+                            }
+                        }
+                        .frame(width: 200)
+
+                        LayerStatusView(layers: viewModel.trainingLayerState, visualization: neuronVisualization)
                         .padding()
                     }
                 }

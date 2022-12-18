@@ -84,8 +84,25 @@ final class NeuralNetworkViewModel: ObservableObject {
 
     private func updateAccuracies() {
         measure("Calculating accuracy") {
-            trainingDataAccuracy = neuralNetwork.neuralNetwork.accuracy(usingInputData: trainingInputAndValidationMatrixes.input, expectedOutput: trainingInputAndValidationMatrixes.validation)
-            testDataAccuracy = neuralNetwork.neuralNetwork.accuracy(usingInputData: testingInputAndValidationMatrixes.input, expectedOutput: testingInputAndValidationMatrixes.validation)
+            final class CalculationResult: @unchecked Sendable {
+                var trainingDataAccuracy: Double = 0
+                var testDataAccuracy: Double = 0
+            }
+
+            let result = CalculationResult()
+
+            DispatchQueue.concurrentPerform(iterations: 2) { [neuralNetwork = neuralNetwork.neuralNetwork!] index in
+                switch index {
+                case 0:
+                    result.trainingDataAccuracy = neuralNetwork.accuracy(usingInputData: trainingInputAndValidationMatrixes.input, expectedOutput: trainingInputAndValidationMatrixes.validation)
+                case 1:
+                    result.testDataAccuracy = neuralNetwork.accuracy(usingInputData: testingInputAndValidationMatrixes.input, expectedOutput: testingInputAndValidationMatrixes.validation)
+                default: fatalError()
+                }
+            }
+
+            self.trainingDataAccuracy = result.trainingDataAccuracy
+            self.testDataAccuracy = result.testDataAccuracy
         }
     }
 }

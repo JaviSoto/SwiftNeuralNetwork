@@ -55,7 +55,7 @@ extension [ColorPixel] {
             bitsPerPixel: 4 * 8,
             bytesPerRow: 4 * width,
             space: CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: .byteOrder32Little,
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue).union(.byteOrder32Little),
             provider: providerRef!,
             decode: nil,
             shouldInterpolate: true,
