@@ -13,6 +13,7 @@ import Accelerate
 // https://www.youtube.com/watch?v=w8yWXqWQYmU&t=1235s
 struct NeuralNetwork {
     struct ActivationFunction {
+        let name: String
         let function: (Matrix) -> Matrix
         let derivative: (Matrix) -> Matrix
     }
@@ -20,14 +21,14 @@ struct NeuralNetwork {
     struct Layer {
         var weights: Matrix {
             didSet {
-                assert(weights.rows == neuronCount)
-                assert(weights.columns == oldValue.columns)
+                precondition(weights.rows == neuronCount)
+                precondition(weights.columns == oldValue.columns)
             }
         }
         var biases: Matrix {
             didSet {
-                assert(biases.rows == neuronCount)
-                assert(biases.columns == oldValue.columns)
+                precondition(biases.rows == neuronCount)
+                precondition(biases.columns == oldValue.columns)
             }
         }
 
@@ -44,8 +45,8 @@ struct NeuralNetwork {
         }
     }
 
-    private let inputLayerNeuronCount: Int
-    private let outputLayerSize: Int
+    let inputLayerNeuronCount: Int
+    let outputLayerSize: Int
 
     private var layers: [Layer] = []
 
@@ -75,9 +76,9 @@ struct NeuralNetwork {
     ///   - progressObserver: An object you can observe to get updates on the training.
     mutating func train(usingTrainingData trainingData: Matrix, validationData: Matrix, iterations: Int, learningRate: Double, progressObserver: TrainingProgressObserver) {
         precondition(!layers.isEmpty)
-        assert(trainingData.columns == validationData.rows)
-        assert(validationData.rows > validationData.columns)
-        assert(layers.last!.neuronCount == outputLayerSize)
+        precondition(trainingData.columns == validationData.rows)
+        precondition(validationData.rows > validationData.columns)
+        precondition(layers.last!.neuronCount == outputLayerSize)
 
         progressObserver.accuracies = []
         progressObserver.accuracies.reserveCapacity(iterations)
@@ -91,7 +92,7 @@ struct NeuralNetwork {
             }
 
             let neuralNetworkOutput = forwardProp.last!.activationFunctionApplied
-            let accuracy = accuracy(ofOutput: neuralNetworkOutput, againstValidationData: validationData)
+            let accuracy = Self.accuracy(ofOutput: neuralNetworkOutput, againstValidationData: validationData)
 
             progressObserver.accuracies.append(accuracy)
 
@@ -103,12 +104,12 @@ struct NeuralNetwork {
 
     func accuracy(usingInputData inputData: Matrix, expectedOutput: Matrix) -> Double {
         precondition(!layers.isEmpty)
-        assert(inputData.columns == expectedOutput.rows)
-        assert(expectedOutput.rows > expectedOutput.columns)
+        precondition(inputData.columns == expectedOutput.rows)
+        precondition(expectedOutput.rows > expectedOutput.columns)
 
         let forwardProp = forwardPropagation(inputData: inputData)
         let neuralNetworkOutput = forwardProp.last!.activationFunctionApplied
-        return accuracy(ofOutput: neuralNetworkOutput, againstValidationData: expectedOutput)
+        return Self.accuracy(ofOutput: neuralNetworkOutput, againstValidationData: expectedOutput)
     }
 }
 
@@ -141,7 +142,7 @@ private extension NeuralNetwork {
 
     /// - Returns: A `LayerForwardPropagationResult` value for each of the layers that the data flows through.
     func forwardPropagation(inputData: Matrix) -> [LayerForwardPropagationResult] {
-        assert(inputData.rows == inputLayerNeuronCount)
+        precondition(inputData.rows == inputLayerNeuronCount)
 
         var results: [LayerForwardPropagationResult] = []
 
@@ -152,10 +153,10 @@ private extension NeuralNetwork {
             let activations = layer.activationFunction.function(weightsApplied).assertValid() // An
             nextLayerInput = activations
 
-            assert(weightsApplied.rows == layer.neuronCount)
-            assert(activations.rows == layer.neuronCount)
-            assert(weightsApplied.columns == inputData.columns)
-            assert(activations.columns == inputData.columns)
+            precondition(weightsApplied.rows == layer.neuronCount)
+            precondition(activations.rows == layer.neuronCount)
+            precondition(weightsApplied.columns == inputData.columns)
+            precondition(activations.columns == inputData.columns)
 
             results.append(.init(weightsApplied: weightsApplied, activationFunctionApplied: activations))
         }
@@ -164,7 +165,7 @@ private extension NeuralNetwork {
     }
 
     func backwardsPropagation(usingTrainingData trainingData: Matrix, validationData: Matrix, forwardPropagationResults: [LayerForwardPropagationResult])  -> [LayerBackwardPropagationResult] {
-        assert(forwardPropagationResults.count == layers.count)
+        precondition(forwardPropagationResults.count == layers.count)
 
         let trainingDataPoints = Double(trainingData.columns) // m
 
@@ -177,22 +178,24 @@ private extension NeuralNetwork {
 
             let previousLayerActivationData = isFirstLayer ? trainingData : forwardPropagationResults[index - 1].activationFunctionApplied
 
-            let layerMatrixDelta = isLastLayer
-            ? forwardPropagationData.activationFunctionApplied - validationData.oneHot(withOutputLayerSize: outputLayerSize)
-            : layers[index + 1].weights′ ° backwardPropagationResults.last!.layerMatrixDelta * layer.activationFunction.derivative(forwardPropagationResults[index].weightsApplied) // dZn
-            let layerWeightDelta = (1 / trainingDataPoints * layerMatrixDelta).assertValid() ° previousLayerActivationData′
-            // dWn
-            let layerBiasDelta = 1 / trainingDataPoints * layerMatrixDelta.sum() // dbn
+            let layerMatrixDelta: Matrix  // dZn
+            if !isLastLayer {
+                layerMatrixDelta = ((layers[index + 1].weights′) ° backwardPropagationResults.last!.layerMatrixDelta) * layer.activationFunction.derivative(forwardPropagationResults[index].weightsApplied)
+            } else {
+                layerMatrixDelta = forwardPropagationData.activationFunctionApplied - validationData.oneHot(withOutputLayerSize: outputLayerSize)
+            }
+            let layerWeightDelta = (1 / trainingDataPoints) * (layerMatrixDelta ° (previousLayerActivationData′)) // dWn
+            let layerBiasDelta = (1 / trainingDataPoints) * layerMatrixDelta.sum() // dbn
 
-            assert(layerMatrixDelta.rows == layer.neuronCount)
-            assert(layerMatrixDelta.columns == trainingData.columns)
-            assert(layerMatrixDelta.rows == layer.weights.rows)
+            precondition(layerMatrixDelta.rows == layer.neuronCount)
+            precondition(layerMatrixDelta.columns == trainingData.columns)
+            precondition(layerMatrixDelta.rows == layer.weights.rows)
 
             layerBiasDelta.assertValid()
 
-            assert(layerWeightDelta.rows == layer.neuronCount)
-            assert(layerWeightDelta.rows == layer.weights.rows)
-            assert(layerWeightDelta.columns == layer.weights.columns)
+            precondition(layerWeightDelta.rows == layer.neuronCount)
+            precondition(layerWeightDelta.rows == layer.weights.rows)
+            precondition(layerWeightDelta.columns == layer.weights.columns)
 
             backwardPropagationResults.append(.init(layerMatrixDelta: layerMatrixDelta, weightDelta: layerWeightDelta, biasDelta: layerBiasDelta))
         }
@@ -208,7 +211,7 @@ private extension NeuralNetwork {
 
     /// - Parameter output: The output of the neural network. The shape is [outputLayerSize rows, trainingData columns]
     /// - Returns:A `Matrix` with a row for each training data point whose value is the predicted value for it.
-    func getPredictions(usingOutput output: Matrix) -> Matrix {
+    static func getPredictions(usingOutput output: Matrix) -> Matrix {
         var predictedValues: [[Double]] = []
         predictedValues.reserveCapacity(output.columns)
 
@@ -218,29 +221,37 @@ private extension NeuralNetwork {
 
             for row in 0..<output.rows {
                 let value = output[row, column]
-                assert(value > 0)
+                precondition(value >= 0)
                 if value > maxPredictedValue {
                     maxPredictedValue = value
-                    predictedValue = Double(row + 1)
+                    predictedValue = Double(row)
                 }
             }
 
+            precondition(predictedValue >= 0)
+            precondition(predictedValue <= 9)
             predictedValues.append([predictedValue])
         }
 
         let result = Matrix(predictedValues)
 
-        assert(result.rows == output.columns)
-        assert(result.columns == 1)
+        precondition(result.rows == output.columns)
+        precondition(result.columns == 1)
 
         return result
     }
+}
 
-    func accuracy(ofOutput output: Matrix, againstValidationData validationData: Matrix) -> Double {
+extension NeuralNetwork {
+    internal // @testable
+    static func accuracy(ofOutput output: Matrix, againstValidationData validationData: Matrix) -> Double {
+        precondition(validationData.rows == output.columns)
+        precondition(validationData.columns == 1)
+        precondition(validationData.rows > 1)
+        precondition(output.columns == validationData.rows)
+
         let predictions = getPredictions(usingOutput: output)
-        assert(predictions.rows == validationData.rows)
-        assert(predictions.columns == validationData.columns)
-        assert(predictions.rows > 1)
+        precondition(predictions.shape == validationData.shape)
 
         return Double(zip(validationData.mutableValues, predictions.mutableValues)
             .numberOfElements(matching: { $0 == $1 }))
@@ -250,6 +261,7 @@ private extension NeuralNetwork {
 
 extension NeuralNetwork.ActivationFunction {
     static let reLU = NeuralNetwork.ActivationFunction(
+        name: "ReLU",
         function: { $0.ReLU() },
         derivative: {
             $0.map { $0 > 0 ? 1 : 0 }
@@ -257,8 +269,9 @@ extension NeuralNetwork.ActivationFunction {
     )
 
     static let softMax = NeuralNetwork.ActivationFunction(
+        name: "softMax",
         function: {
-            let inputExp = exp($0 - max($0))
+            let inputExp = exp($0) // TODO
             // Add a small epsilon to the demominator to avoid division by 0
             let result = inputExp / (inputExp.sumMatrix() + 1e-5)
             return result.assertValid()
@@ -269,82 +282,12 @@ extension NeuralNetwork.ActivationFunction {
     )
 }
 
+internal // @testable
 extension Matrix {
-    private struct MatrixMirror {
-        let rows: Int
-        let columns: Int
-        var values: [Double]
-
-        var matrix: Matrix {
-            return Matrix(rows: rows, columns: columns, values: values)
-        }
-
-        init(from matrix: Matrix) {
-            self = unsafeBitCast(matrix, to: MatrixMirror.self)
-        }
-    }
-
-    func ReLU() -> Matrix {
-        // A matrix where every element is at least 0
-        return maxel(0, self)
-    }
-
-    func sum() -> Double {
-        let sum = vDSP.sum(mutableValues)
-        return sum.isFinite ? sum : Double.greatestFiniteMagnitude
-    }
-
-    var average: Double {
-        var average: Double = 0
-        let values = mutableValues
-        let count = values.count
-
-        for value in values {
-            average += value / Double(count)
-        }
-
-        return average
-    }
-
-    func sumMatrix() -> Matrix {
-        var result = Matrix(rows: 1, columns: columns, repeatedValue: 0)
-
-        for row in 0..<rows {
-            for column in 0..<columns {
-                result[0, column] += self[row, column]
-            }
-        }
-
-        return result
-    }
-
-    var mutableValues: [Double] {
-        get {
-            return MatrixMirror(from: self).values
-        }
-        set {
-            newValue.forEach { $0.assertValid() }
-
-            var mirror = MatrixMirror(from: self)
-            mirror.values = newValue
-            self = mirror.matrix
-        }
-    }
-
-    func map(_ f: (Double) -> Double) -> Matrix {
-        var copy = self
-        copy.mutableValues = copy.mutableValues.map { value in
-            let newValue = f(value)
-            newValue.assertValid()
-            return newValue
-        }
-        return copy
-    }
-}
-
-private extension Matrix {
     func oneHot(withOutputLayerSize outputLayerSize: Int) -> Matrix {
-        assert(rows > 1)
+        let numberOfSamples = rows
+        precondition(numberOfSamples > 1)
+        precondition(columns == 1)
 
         // Self is the validation data, with the following format: n rows, 1 column
         // [1, 7, 3, 9, 4, 1, 5...]
@@ -353,56 +296,17 @@ private extension Matrix {
 
         var oneHot = Matrix(
             rows: outputLayerSize,
-            columns: rows,
+            columns: numberOfSamples,
             repeatedValue: 0)
 
-        for row in 0..<oneHot.rows {
-            for col in 0..<oneHot.columns {
-                if self[col, 0] == Double(row + 1) {
-                    oneHot[row, col] = 1
-                }
-
-            }
+        for sample in 0..<numberOfSamples {
+            let sampleValue = Int(exactly: self[sample, 0])!
+            oneHot[sampleValue, sample] = 1
         }
 
-        assert(oneHot.rows == outputLayerSize)
-        assert(oneHot.columns == self.rows)
+        precondition(oneHot.rows == outputLayerSize)
+        precondition(oneHot.columns == self.rows)
 
         return oneHot
-    }
-}
-
-private extension Sequence {
-    func numberOfElements(matching f: (Element) -> Bool) -> Int {
-        var count = 0
-        for element in self {
-            if f(element) {
-                count += 1
-            }
-        }
-
-        return count
-    }
-}
-
-extension Matrix {
-    var shape: String {
-        return "(\(rows), \(columns))"
-    }
-}
-
-private extension Matrix {
-    func assertValid(file: StaticString = #file, line: UInt = #line) -> Matrix {
-        #if DEBUG
-        mutableValues.forEach { $0.assertValid(file: file, line: line) }
-        #endif
-        return self
-    }
-}
-
-private extension Double {
-    func assertValid(file: StaticString = #file, line: UInt = #line) {
-        assert(!self.isNaN, file: file, line: line)
-        assert(!self.isInfinite, file: file, line: line)
     }
 }

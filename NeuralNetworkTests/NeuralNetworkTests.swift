@@ -34,4 +34,43 @@ final class NeuralNetworkTests: XCTestCase {
 
         XCTAssertEqual(matrix.sumMatrix(), Matrix([[5, 7, 9]]))
     }
+
+    func testOneHotMatrix() {
+        let values: [Double] = [1, 9, 2, 0]
+        let testOutputs = Matrix(rows: values.count, columns: 1, values: values)
+        let expectedResult = Matrix([
+            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ])′
+
+        let result = testOutputs.oneHot(withOutputLayerSize: 10)
+
+        XCTAssertEqual(result.rows, 10)
+        XCTAssertEqual(result.columns, values.count)
+
+        XCTAssertEqual(result, expectedResult)
+    }
+
+    func testAccuracyCalculation() {
+        let output = Matrix([
+            [0.6, 0.3, 0.2, 0.1, 0.4, 0.12, 0.3, 0.25, 0.11, 0.05], // 0 is highest
+            [0.1, 0.9, 0.2, 0.1, 0.4, 0.12, 0.3, 0.25, 0.11, 0.05], // 1 is highest
+            [0.1, 0.7, 0.2, 0.1, 0.4, 0.12, 0.3, 0.25, 0.11, 0.85], // 9 is highest
+            [0.1, 0.7, 0.2, 0.1, 0.4, 0.12, 0.3, 0.25, 0.11, 0.45], // 1 is highest
+            [0.1, 0.7, 0.2, 0.1, 0.4, 0.12, 0.3, 0.25, 0.11, 0.45], // 1 is highest
+            [0.1, 0.7, 0.2, 0.89, 0.4, 0.12, 0.3, 0.25, 0.11, 0.45], // 3 is highest
+        ])′
+        let validationData = Matrix([[
+            0, // Correct
+            2, // Incorrect
+            9, // Correct
+            4, // Incorrect
+            1, // Correct
+            6 // Incorrect
+        ]])′
+
+        XCTAssertEqual(NeuralNetwork.accuracy(ofOutput: output, againstValidationData: validationData), 0.5)
+    }
 }

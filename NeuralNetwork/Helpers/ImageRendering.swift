@@ -26,7 +26,7 @@ extension SampleImage {
     private func asCGImage(width: UInt32) -> CGImage {
         let width = Int(width)
         let pixels = pixels.map(\.sRGBAValue)
-        assert(pixels.count.isMultiple(of: width))
+        precondition(pixels.count.isMultiple(of: width))
 
         let providerRef = CGDataProvider(data: NSData(bytes: pixels, length: pixels.count * 4))
 

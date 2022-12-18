@@ -62,7 +62,11 @@ struct NeuralNetworkConfigurationView: View {
                                     }
                                 }
 
-                                if !isOutputLayer {
+                                if isOutputLayer {
+                                    Text("\(viewModel.neuralNetwork.neuralNetwork.outputLayerSize) output neurons")
+                                        .italic()
+                                        .frame(alignment: .leading)
+                                } else {
                                     ValueSlider(name: "Number of neurons", value: $viewModel.neuralNetwork.configuration.layers[index].neuronCount.double, range: 1...20, step: 1, decimalPoints: 0)
                                 }
 

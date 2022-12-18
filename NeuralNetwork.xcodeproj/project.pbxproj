@@ -24,6 +24,8 @@
 		59D542EA294E7F9B00919139 /* NeuralNetworkConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542E9294E7F9B00919139 /* NeuralNetworkConfigurationView.swift */; };
 		59D542EC294E801200919139 /* SampleImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542EB294E801200919139 /* SampleImageView.swift */; };
 		59D542EE294E824B00919139 /* RandomData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542ED294E824B00919139 /* RandomData.swift */; };
+		59D542F0294EAECA00919139 /* Matrix+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542EF294EAECA00919139 /* Matrix+Extensions.swift */; };
+		59D542F2294EAF0B00919139 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D542F1294EAF0B00919139 /* Extensions.swift */; };
 		59F58AEB294AF793006FC86D /* ImageRendering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AEA294AF793006FC86D /* ImageRendering.swift */; };
 		59F58AED294AFCA0006FC86D /* NeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AEC294AFCA0006FC86D /* NeuralNetwork.swift */; };
 		59F58AF5294B01EE006FC86D /* NeuralNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F58AF4294B01EE006FC86D /* NeuralNetworkTests.swift */; };
@@ -63,6 +65,8 @@
 		59D542E9294E7F9B00919139 /* NeuralNetworkConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeuralNetworkConfigurationView.swift; sourceTree = "<group>"; };
 		59D542EB294E801200919139 /* SampleImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleImageView.swift; sourceTree = "<group>"; };
 		59D542ED294E824B00919139 /* RandomData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomData.swift; sourceTree = "<group>"; };
+		59D542EF294EAECA00919139 /* Matrix+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Matrix+Extensions.swift"; sourceTree = "<group>"; };
+		59D542F1294EAF0B00919139 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		59F58AEA294AF793006FC86D /* ImageRendering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageRendering.swift; sourceTree = "<group>"; };
 		59F58AEC294AFCA0006FC86D /* NeuralNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeuralNetwork.swift; sourceTree = "<group>"; };
 		59F58AF2294B01EE006FC86D /* NeuralNetworkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NeuralNetworkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -138,6 +142,8 @@
 			children = (
 				5957BCF0294A9F63001DF85D /* MNISTParser.swift */,
 				59F58AEC294AFCA0006FC86D /* NeuralNetwork.swift */,
+				59D542EF294EAECA00919139 /* Matrix+Extensions.swift */,
+				59D542F1294EAF0B00919139 /* Extensions.swift */,
 			);
 			path = Framework;
 			sourceTree = "<group>";
@@ -298,6 +304,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				59F58AED294AFCA0006FC86D /* NeuralNetwork.swift in Sources */,
+				59D542F2294EAF0B00919139 /* Extensions.swift in Sources */,
 				59D542DA294C2D8B00919139 /* SwiftUIExtensions.swift in Sources */,
 				59F58AEB294AF793006FC86D /* ImageRendering.swift in Sources */,
 				59D542E4294E75D300919139 /* DataLoading.swift in Sources */,
@@ -309,6 +316,7 @@
 				59D542E8294E7E0100919139 /* PredictionVisualizationView.swift in Sources */,
 				59D542EA294E7F9B00919139 /* NeuralNetworkConfigurationView.swift in Sources */,
 				5957BCF1294A9F63001DF85D /* MNISTParser.swift in Sources */,
+				59D542F0294EAECA00919139 /* Matrix+Extensions.swift in Sources */,
 				59D542DE294E717500919139 /* LearningAccuracyEvolutionGraph.swift in Sources */,
 				59D542E6294E762500919139 /* NeuralNetworkView.swift in Sources */,
 				59D542EC294E801200919139 /* SampleImageView.swift in Sources */,

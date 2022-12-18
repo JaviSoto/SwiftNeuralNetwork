@@ -89,7 +89,7 @@ enum MNISTParser {
         }
 
         static func + (lhs: DataSet, rhs: DataSet) -> DataSet {
-            assert(lhs.imageWidth == rhs.imageWidth)
+            precondition(lhs.imageWidth == rhs.imageWidth)
 
             var items = lhs.items
             items.append(contentsOf: rhs.items)
@@ -102,7 +102,7 @@ enum MNISTParser {
         let imageSet = try parseImageSet(from: imageSetFileURL, maxCount: maxCount)
         let labels = try parseLabels(from: labelDataFileURL, maxCount: maxCount)
 
-        assert(imageSet.images.count == labels.labels.count)
+        precondition(imageSet.images.count == labels.labels.count)
 
         let items = zip(imageSet.images, labels.labels).map { ($0, $1) }
 

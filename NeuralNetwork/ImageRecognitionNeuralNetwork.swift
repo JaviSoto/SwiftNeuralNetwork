@@ -86,7 +86,7 @@ struct ImageRecognitionNeuralNetwork {
 
         var digits: [Digit] {
             didSet {
-                assert(digits.count == 10)
+                precondition(digits.count == 10)
             }
         }
 

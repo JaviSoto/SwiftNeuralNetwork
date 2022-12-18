@@ -25,7 +25,7 @@ enum DataLoading {
                 let testLabels = Bundle.main.url(forResource: "t10k-labels-idx1-ubyte", withExtension: nil)!
 
     #if DEBUG
-                let maxCount = 10
+                let maxCount = 100
     #else
                 let maxCount: Int? = nil
     #endif
