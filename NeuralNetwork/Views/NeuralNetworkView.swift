@@ -38,8 +38,8 @@ struct NeuralNetworkView: View {
                 item: randomItem,
                 imageWidth: trainingData.training.imageWidth,
                 updateImage: { updateImage() },
-                randomItemPredictionOutcome: $randomItemPredictionOutcome,
-                predictionOutcomeTableOrder: $predictionOutcomeTableOrder
+                predictionOutcome: $randomItemPredictionOutcome,
+                tableOrder: $predictionOutcomeTableOrder
             )
         }
         .onAppear {

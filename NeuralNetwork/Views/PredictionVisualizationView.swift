@@ -13,37 +13,47 @@ struct PredictionVisualizationView: View {
     let updateImage: () -> Void
 
     @Binding
-    var randomItemPredictionOutcome: ImageRecognitionNeuralNetwork.PredictionOutcome
+    var predictionOutcome: ImageRecognitionNeuralNetwork.PredictionOutcome
 
     @Binding
-    var predictionOutcomeTableOrder: [KeyPathComparator<ImageRecognitionNeuralNetwork.PredictionOutcome.Digit>]
+    var tableOrder: [KeyPathComparator<ImageRecognitionNeuralNetwork.PredictionOutcome.Digit>]
 
     var body: some View {
         VStack {
             if let item {
                 VStack {
                     VStack {
+                        let isCorrectPrediction = predictionOutcome.highestDigit.value == item.label.representedNumber
+
                         Text("Data label: \(item.label.representedNumber)")
                             .font(.title)
+
+                        HStack {
+                            Image(systemName: isCorrectPrediction ? "checkmark.circle.fill" : "x.circle.fill")
+                                .foregroundColor(isCorrectPrediction ? .green : .red)
+                            Text("Neural Net Output: \(predictionOutcome.highestDigit.value)")
+                                .foregroundColor(isCorrectPrediction ? .green : .red)
+                                .font(.title2)
+                        }
 
                         SampleImageView(sampleImage: item.image, width: imageWidth)
                             .frame(width: 300)
                     }
 
-                    Table(randomItemPredictionOutcome.digits, sortOrder: $predictionOutcomeTableOrder) {
+                    Table(predictionOutcome.digits, sortOrder: $tableOrder) {
                         TableColumn("Digit", value: \.value) { digit in
                             Text("\(digit.value)")
-                                .bold(randomItemPredictionOutcome.highestDigit.value == digit.value)
+                                .bold(predictionOutcome.highestDigit.value == digit.value)
                         }
                         .width(50)
 
                         TableColumn("Confidence", value: \.confidence) { digit in
                             Text("\(digit.confidence.formatted(.percent.precision(.significantDigits(3))))")
-                                .bold(randomItemPredictionOutcome.highestDigit.value == digit.value)
+                                .bold(predictionOutcome.highestDigit.value == digit.value)
                         }
                     }
-                    .onChange(of: predictionOutcomeTableOrder) { newOrder in
-                        randomItemPredictionOutcome.digits.sort(using: newOrder)
+                    .onChange(of: tableOrder) { newOrder in
+                        predictionOutcome.digits.sort(using: newOrder)
                     }
                     .frame(height: 300)
                 }
@@ -69,10 +79,10 @@ struct PredictionVisualizationView_Previews: PreviewProvider {
             item: MNISTParser.DataSet.randomItem,
             imageWidth: MNISTParser.DataSet.imageWidth,
             updateImage: { },
-            randomItemPredictionOutcome: .constant(.init(digits: (0...9).map { digit in
+            predictionOutcome: .constant(.init(digits: (0...9).map { digit in
                     .init(value: digit, confidence: Double.random(in: 0...1))
             })),
-            predictionOutcomeTableOrder: .constant([.init(\.confidence, order: .reverse)])
+            tableOrder: .constant([.init(\.confidence, order: .reverse)])
         )
     }
 }
