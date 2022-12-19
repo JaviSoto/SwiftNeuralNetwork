@@ -19,7 +19,6 @@ struct DataSetListView: View {
         var id: MNISTParser.DataSet.Item.Identifier { sample.id }
     }
 
-    let imageWidth: UInt32
     let sortedItems: [Item]
 
     @Binding
@@ -46,7 +45,7 @@ struct DataSetListView: View {
             .width(50)
 
             TableColumn("Image") { item in
-                PixelArrayImageView(sampleImage: item.sample.image, width: imageWidth)
+                PixelArrayImageView(sampleImage: item.sample.image)
                     .frame(height: 50)
             }
             .width(50)
@@ -63,7 +62,7 @@ struct DataSetListView_Previews: PreviewProvider {
         }
     }
     static var previews: some View {
-        DataSetListView(imageWidth: 28, sortedItems: allItems, selectedItemID: .constant(nil), sortOrder: .constant([]))
+        DataSetListView(sortedItems: allItems, selectedItemID: .constant(nil), sortOrder: .constant([]))
     }
 }
 

@@ -36,6 +36,8 @@
 		59F58B07294BB721006FC86D /* t10k-images-idx3-ubyte in Resources */ = {isa = PBXBuildFile; fileRef = 59F58B05294BB707006FC86D /* t10k-images-idx3-ubyte */; };
 		59F58B08294BB721006FC86D /* t10k-labels-idx1-ubyte in Resources */ = {isa = PBXBuildFile; fileRef = 59F58B06294BB707006FC86D /* t10k-labels-idx1-ubyte */; };
 		59F800C9294F75160000F32C /* LayerStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F800C8294F75160000F32C /* LayerStatusView.swift */; };
+		59F800CB294FDAD20000F32C /* DigitDrawingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F800CA294FDAD20000F32C /* DigitDrawingView.swift */; };
+		59F800CD294FFECD0000F32C /* ImageRenderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F800CC294FFECD0000F32C /* ImageRenderingTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,6 +82,8 @@
 		59F58B05294BB707006FC86D /* t10k-images-idx3-ubyte */ = {isa = PBXFileReference; lastKnownFileType = file; path = "t10k-images-idx3-ubyte"; sourceTree = "<group>"; };
 		59F58B06294BB707006FC86D /* t10k-labels-idx1-ubyte */ = {isa = PBXFileReference; lastKnownFileType = file; path = "t10k-labels-idx1-ubyte"; sourceTree = "<group>"; };
 		59F800C8294F75160000F32C /* LayerStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerStatusView.swift; sourceTree = "<group>"; };
+		59F800CA294FDAD20000F32C /* DigitDrawingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitDrawingView.swift; sourceTree = "<group>"; };
+		59F800CC294FFECD0000F32C /* ImageRenderingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageRenderingTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,6 +171,7 @@
 				59D542E7294E7E0100919139 /* PredictionVisualizationView.swift */,
 				59D542EB294E801200919139 /* PixelArrayImageView.swift */,
 				59D542F5294EE5FD00919139 /* PredictionCorrectnessView.swift */,
+				59F800CA294FDAD20000F32C /* DigitDrawingView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -186,6 +191,7 @@
 			isa = PBXGroup;
 			children = (
 				59F58AF4294B01EE006FC86D /* NeuralNetworkTests.swift */,
+				59F800CC294FFECD0000F32C /* ImageRenderingTests.swift */,
 			);
 			path = NeuralNetworkTests;
 			sourceTree = "<group>";
@@ -325,6 +331,7 @@
 				5957BCE2294A9F59001DF85D /* NeuralNetworkApp.swift in Sources */,
 				59D542E2294E75B600919139 /* NeuralNetworkViewModel.swift in Sources */,
 				59D542E8294E7E0100919139 /* PredictionVisualizationView.swift in Sources */,
+				59F800CB294FDAD20000F32C /* DigitDrawingView.swift in Sources */,
 				59D542EA294E7F9B00919139 /* NeuralNetworkConfigurationView.swift in Sources */,
 				59D542F6294EE5FD00919139 /* PredictionCorrectnessView.swift in Sources */,
 				5957BCF1294A9F63001DF85D /* MNISTParser.swift in Sources */,
@@ -340,6 +347,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				59F800CD294FFECD0000F32C /* ImageRenderingTests.swift in Sources */,
 				59F58AF5294B01EE006FC86D /* NeuralNetworkTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

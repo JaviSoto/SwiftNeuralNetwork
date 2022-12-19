@@ -25,3 +25,13 @@ struct ValueSlider: View {
         }
     }
 }
+
+extension Color {
+    static var background: Color {
+        #if os(macOS)
+        return Color(nsColor: NSColor.windowBackgroundColor)
+        #elseif os(iOS)
+        return Color(uiColor: UIColor.background)
+        #endif
+    }
+}

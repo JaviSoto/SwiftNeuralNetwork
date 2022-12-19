@@ -51,7 +51,7 @@ struct PixelArrayImageView: View {
 }
 
 extension PixelArrayImageView {
-    init(sampleImage: SampleImage, width: UInt32, lazy: Bool = true) {
-        self.init(pixels: sampleImage.pixels.map { $0.colorPixel }, width: width, lazy: lazy)
+    init(sampleImage: SampleImage, lazy: Bool = true) {
+        self.init(pixels: sampleImage.pixels.map { $0.colorPixel }, width: sampleImage.width, lazy: lazy)
     }
 }

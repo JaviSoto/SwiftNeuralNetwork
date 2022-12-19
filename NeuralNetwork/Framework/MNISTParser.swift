@@ -10,6 +10,16 @@ import Foundation
 struct SampleImage: Equatable {
     typealias Pixel = UInt8
     let pixels: [Pixel]
+    let width: UInt32
+    let height: UInt32
+
+    init(pixels: [Pixel], width: UInt32, height: UInt32) {
+        assert(pixels.count == width * height)
+
+        self.pixels = pixels
+        self.width = width
+        self.height = height
+    }
 }
 
 struct Label: Equatable, Comparable {
@@ -49,7 +59,7 @@ enum MNISTParser {
 
         let images = Array((0..<min(Int(header.numberOfItems), maxCount ?? .max)).lazy
             .map { _ in parser.parseArrayOfBytes(withCount: rows * columns) }
-            .map(SampleImage.init))
+            .map { SampleImage(pixels: $0, width: rows, height: columns) })
 
         return TrainingImageSetFile(
             header: header,

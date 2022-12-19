@@ -41,7 +41,7 @@ extension [ColorPixel] {
     }
     #endif
 
-    private func asCGImage(width: UInt32) -> CGImage {
+    func asCGImage(width: UInt32) -> CGImage {
         let width = Int(width)
         let pixels = self.map(\.sRGBAValue)
         precondition(pixels.count.isMultiple(of: width))
@@ -61,6 +61,53 @@ extension [ColorPixel] {
             shouldInterpolate: true,
             intent: .defaultIntent
         )!
+    }
+}
+
+extension SampleImage {
+    init(_ cgImage: CGImage) {
+        let bitsPerComponent = cgImage.bitsPerComponent
+        let bytesPerRow = cgImage.width * bitsPerComponent / 8
+        let totalBytes = cgImage.height * bytesPerRow
+
+        var intensities = [SampleImage.Pixel](repeating: 0, count: totalBytes)
+
+        let context = CGContext(
+            data: &intensities,
+            width: cgImage.width,
+            height: cgImage.height,
+            bitsPerComponent: bitsPerComponent,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceGray(),
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue).rawValue
+        )!
+
+        context.draw(cgImage, in: CGRect(
+            x: 0,
+            y: 0,
+            width: Int(cgImage.width),
+            height: Int(cgImage.height)
+        ))
+
+        self = .init(pixels: intensities, width: UInt32(cgImage.width), height: UInt32(cgImage.height))
+    }
+}
+
+extension CGImage {
+    func scale(toWidth width: Int) -> CGImage {
+        let context = CGContext(
+            data: nil,
+            width: Int(width),
+            height: Int(width),
+            bitsPerComponent: bitsPerComponent,
+            bytesPerRow: 0,
+            space: colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: bitmapInfo.rawValue
+        )!
+        context.interpolationQuality = .high
+        context.draw(self, in: CGRect(origin: .zero, size: CGSize(width: width, height: width)))
+
+        return context.makeImage()!
     }
 }
 

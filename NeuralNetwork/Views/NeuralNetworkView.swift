@@ -21,10 +21,12 @@ struct NeuralNetworkView: View {
     @ObservedObject
     private var viewModel: NeuralNetworkViewModel
 
+    @Environment(\.openWindow)
+    private var openWindow
+
     init(trainingData: MNISTData) {
         self.trainingData = trainingData
         self.viewModel = NeuralNetworkViewModel(trainingData: trainingData)
-
         self.itemsByID = Dictionary(uniqueKeysWithValues: self.trainingData.all.items.map { ($0.id, $0) })
     }
 
@@ -56,15 +58,16 @@ struct NeuralNetworkView: View {
             .navigationSplitViewColumnWidth(min: 400, ideal: 450)
         }, content: {
             PredictionVisualizationView(
-                item: selectedItem,
-                imageWidth: trainingData.training.imageWidth,
+                attempt: selectedItem.map { .init(image: $0.image, expectedLabel: $0.label) },
                 predictionOutcome: $randomItemPredictionOutcome,
                 tableOrder: $predictionOutcomeTableOrder
             )
+#if os(macOS)
+            .navigationSubtitle(selectedItem.map { "Selected item '\(String(describing: $0.id))'" } ?? "")
+#endif
             .navigationSplitViewColumnWidth(min: 300, ideal: 400)
         }, detail: {
             DataSetListView(
-                imageWidth: trainingData.all.imageWidth,
                 sortedItems: sortedDataListItems,
                 selectedItemID: $selectedItemID,
                 sortOrder: $dataSetListTableOrder
@@ -74,6 +77,14 @@ struct NeuralNetworkView: View {
         .toolbar {
             ToolbarItem(placement: ToolbarItemPlacement.navigation) {
                 SwiftUI.Label("Neural Network", systemImage: "brain")
+            }
+
+            ToolbarItem(placement: .navigation) {
+                Button(action: {
+                    openWindow(id: DigitDrawingView.windowIdentifier)
+                }, label: {
+                    SwiftUI.Label("Draw Digit", systemImage: "hand.draw.fill")
+                })
             }
         }
         .onAppear {
@@ -93,6 +104,9 @@ struct NeuralNetworkView: View {
         }
         .onChange(of: dataSetListTableOrder) { newOrder in
             updateSortedDataListItems(using: newOrder)
+        }
+        .onAppear {
+            AppState.shared.viewModel = self.viewModel
         }
         .frame(minWidth: 1000, minHeight: 600)
     }

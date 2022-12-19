@@ -23,7 +23,13 @@ struct ContentView: View {
                 }
             }
         }.task {
-            trainingData = await DataLoading.loadTrainingData()
+#if DEBUG
+            let maxCount = 1000
+#else
+            let maxCount: Int? = nil
+#endif
+
+            trainingData = await DataLoading.loadTrainingData(maxCount: maxCount)
         }
     }
 }

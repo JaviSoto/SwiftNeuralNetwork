@@ -8,8 +8,12 @@
 import SwiftUI
 
 struct PredictionVisualizationView: View {
-    let item: MNISTParser.DataSet.Item?
-    let imageWidth: UInt32
+    struct PredictionAttempt {
+        let image: SampleImage
+        let expectedLabel: Label?
+    }
+
+    let attempt: PredictionAttempt?
 
     @Binding
     var predictionOutcome: ImageRecognitionNeuralNetwork.PredictionOutcome
@@ -19,22 +23,25 @@ struct PredictionVisualizationView: View {
 
     var body: some View {
         VStack {
-            if let item {
+            if let attempt {
                 VStack {
                     VStack {
-                        let isCorrectPrediction = predictionOutcome.highestDigit.value == item.label.representedNumber
+                        if let expectedLabel = attempt.expectedLabel {
+                            let isCorrectPrediction = predictionOutcome.highestDigit.value == expectedLabel.representedNumber
 
-                        Text("Data label: \(item.label.representedNumber)")
-                            .font(.title)
-
-                        HStack {
-                            PredictionCorrectnessView(predictionOutcome: predictionOutcome, expectedLabel: item.label)
-                            Text("Neural Net Output: \(predictionOutcome.highestDigit.value)")
-                                .foregroundColor(isCorrectPrediction ? .green : .red)
+                            Text("Data label: \(expectedLabel.representedNumber)")
                                 .font(.title)
+
+                            HStack {
+                                PredictionCorrectnessView(predictionOutcome: predictionOutcome, expectedLabel: expectedLabel)
+                                neuralNetOutputView
+                                    .foregroundColor(isCorrectPrediction ? .green : .red)
+                            }
+                        } else {
+                            neuralNetOutputView
                         }
 
-                        PixelArrayImageView(sampleImage: item.image, width: imageWidth, lazy: false)
+                        PixelArrayImageView(sampleImage: attempt.image, lazy: false)
                             .frame(width: 300)
                     }
 
@@ -61,10 +68,12 @@ struct PredictionVisualizationView: View {
             Divider()
 
         }
-        #if os(macOS)
-        .navigationSubtitle(item.map { "Selected item '\(String(describing: $0.id))'" } ?? "")
-        #endif
         .padding(.vertical)
+    }
+
+    private var neuralNetOutputView: some View {
+        Text("Neural Net Output: \(predictionOutcome.highestDigit.value)")
+            .font(.title)
     }
 }
 
@@ -73,8 +82,7 @@ struct PredictionVisualizationView: View {
 struct PredictionVisualizationView_Previews: PreviewProvider {
     static var previews: some View {
         PredictionVisualizationView(
-            item: MNISTParser.DataSet.randomItem,
-            imageWidth: MNISTParser.DataSet.imageWidth,
+            attempt: .init(image: MNISTParser.DataSet.randomItem.image, expectedLabel: MNISTParser.DataSet.randomItem.label),
             predictionOutcome: .constant(.init(digits: (0...9).map { digit in
                     .init(value: digit, confidence: Double.random(in: 0...1))
             })),

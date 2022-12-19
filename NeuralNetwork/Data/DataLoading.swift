@@ -15,7 +15,7 @@ struct MNISTData {
 }
 
 enum DataLoading {
-    static func loadTrainingData() async -> MNISTData {
+    static func loadTrainingData(maxCount: Int?) async -> MNISTData {
         return await Task.detached { () -> MNISTData in
             return measure("Loading training data") {
                 let trainingImages = Bundle.main.url(forResource: "train-images-idx3-ubyte", withExtension: nil)!
@@ -23,12 +23,6 @@ enum DataLoading {
 
                 let testImages = Bundle.main.url(forResource: "t10k-images-idx3-ubyte", withExtension: nil)!
                 let testLabels = Bundle.main.url(forResource: "t10k-labels-idx1-ubyte", withExtension: nil)!
-
-    #if DEBUG
-                let maxCount = 1000
-    #else
-                let maxCount: Int? = nil
-    #endif
 
                 final class Results: @unchecked Sendable {
                     var training: MNISTParser.DataSet!
