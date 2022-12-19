@@ -265,9 +265,6 @@ extension SampleImage {
     }
 
     func randomlyShiftingContents() -> SampleImage {
-        let maxAbsoluteXShift = Int(self.width) / 6
-        let maxAbsoluteYShift = Int(self.height) / 6
-
         let maxRotationDegrees: Double = 30
 
         let result = self
