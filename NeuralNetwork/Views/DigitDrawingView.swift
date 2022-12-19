@@ -57,6 +57,7 @@ struct DigitDrawingView: View {
                 predictionOutcome: $predictionOutcome,
                 tableOrder: $tableOrder
             )
+            .padding()
         }
         .padding()
         .onChange(of: drawings) { drawings in
@@ -75,6 +76,7 @@ struct DigitDrawingView: View {
         .onChange(of: appState) { appState in
             viewModel = appState.viewModel
         }
+        .frame(minHeight: 600)
         .navigationSubtitle("Drawing")
     }
 

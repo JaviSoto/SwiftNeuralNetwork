@@ -42,7 +42,7 @@ struct PredictionVisualizationView: View {
                         }
 
                         PixelArrayImageView(sampleImage: attempt.image, lazy: false)
-                            .frame(width: 300)
+                            .frame(idealWidth: 300)
                     }
 
                     Table(predictionOutcome.digits, sortOrder: $tableOrder) {
@@ -57,6 +57,7 @@ struct PredictionVisualizationView: View {
                                 .bold(predictionOutcome.highestDigit.value == digit.value)
                         }
                     }
+                    .frame(minHeight: 350)
                     .onChange(of: tableOrder) { newOrder in
                         predictionOutcome.digits.sort(using: newOrder)
                     }
