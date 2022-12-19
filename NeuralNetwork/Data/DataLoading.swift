@@ -34,24 +34,24 @@ enum DataLoading {
                 DispatchQueue.concurrentPerform(iterations: 2) { index in
                     switch index {
                     case 0:
-                        results.training = try! MNISTParser.loadData(imageSetFileURL: trainingImages, labelDataFileURL: trainingLabels, category: .training, maxCount: maxCount)
+                        var training = try! MNISTParser.loadData(imageSetFileURL: trainingImages, labelDataFileURL: trainingLabels, category: .training, maxCount: maxCount)
+                        training.items = training.items.map { item in
+                            var item = item
+                            item.image = item.image.randomlyShiftingContents()
+                            return item
+                        }
+                        results.training = training
                     case 1:
                         results.testing = try! MNISTParser.loadData(imageSetFileURL: testImages, labelDataFileURL: testLabels, category: .testing, maxCount: maxCount)
                     default: fatalError()
                     }
                 }
 
-                var training = results.training!
-                training.items = training.items.map { item in
-                    var item = item
-                    item.image = item.image.randomlyShiftingContents()
-                    return item
-                }
 
                 return .init(
-                    training: training,
+                    training: results.training,
                     testing: results.testing,
-                    all: training + results.testing
+                    all: results.training + results.testing
                 )
             }
         }.value
