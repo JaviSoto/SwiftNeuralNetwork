@@ -64,7 +64,6 @@ struct NeuralNetwork {
         precondition(!layers.isEmpty)
 
         let inputData = Matrix([data])′
-        // TODO: return all the layer activations to visualize them for a given input image?
         return forwardPropagation(inputData: inputData).last!.activationFunctionApplied
     }
 
