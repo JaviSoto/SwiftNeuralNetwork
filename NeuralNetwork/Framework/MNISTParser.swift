@@ -114,7 +114,12 @@ enum MNISTParser {
             }
 
             let id: Identifier
-            let image: SampleImage
+            var image: SampleImage {
+                didSet {
+                    assert(image.width == oldValue.width)
+                    assert(image.height == oldValue.height)
+                }
+            }
             let label: Label
 
             init(id: Identifier, image: SampleImage, label: Label) {

@@ -41,7 +41,18 @@ enum DataLoading {
                     }
                 }
 
-                return .init(training: results.training, testing: results.testing, all: results.training + results.testing)
+                var training = results.training!
+                training.items = training.items.map { item in
+                    var item = item
+                    item.image = item.image.randomlyShiftingContents()
+                    return item
+                }
+
+                return .init(
+                    training: training,
+                    testing: results.testing,
+                    all: training + results.testing
+                )
             }
         }.value
     }
